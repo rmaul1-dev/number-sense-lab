@@ -1,0 +1,1619 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+<title>Number Sense Lab</title>
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Number Sense Lab">
+<meta name="theme-color" content="#1a5f4a">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'none'">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icon-180.png">
+<link rel="icon" href="icon-192.png">
+<style>
+:root{
+  --bg:#0f2e26; --panel:#15392f; --panel2:#1c4a3d; --ink:#f4f1e8; --muted:#a9c4b8;
+  --accent:#f4c95d; --good:#5fd38d; --bad:#ff7a6b; --blue:#7ec8e3; --orange:#f4a261;
+  --tile:#f8f4e6; --tileInk:#1d2b27; --radius:20px;
+  --safe-t:env(safe-area-inset-top,0px); --safe-b:env(safe-area-inset-bottom,0px);
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;height:100%;background:var(--bg);color:var(--ink);
+  font-family:-apple-system,BlinkMacSystemFont,"SF Pro Rounded","Segoe UI",Roboto,sans-serif;
+  -webkit-user-select:none;user-select:none;overscroll-behavior:none}
+body{padding-top:var(--safe-t);padding-bottom:var(--safe-b)}
+button{font:inherit;color:inherit;border:0;cursor:pointer;touch-action:manipulation}
+#app{max-width:1100px;margin:0 auto;min-height:100%;display:flex;flex-direction:column}
+.topbar{display:flex;align-items:center;gap:12px;padding:14px 18px;min-height:76px}
+.topbar .title{font-size:24px;font-weight:800;flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.chip{background:var(--panel2);border-radius:999px;padding:10px 16px;font-weight:700;font-size:18px;white-space:nowrap}
+.btn{background:var(--accent);color:#2a2105;border-radius:16px;padding:16px 24px;font-size:22px;font-weight:800;min-height:64px;min-width:64px}
+.btn.secondary{background:var(--panel2);color:var(--ink)}
+.btn.ghost{background:transparent;color:var(--muted);font-weight:600}
+.btn.small{padding:10px 16px;min-height:52px;font-size:18px}
+.btn:active,.tile:active,.card:active,.key:active{transform:scale(.96)}
+.screen{flex:1;padding:8px 22px 26px;display:flex;flex-direction:column;gap:18px}
+h1{font-size:36px;margin:6px 0}
+h2{font-size:28px;margin:4px 0}
+p{font-size:20px;line-height:1.45;margin:0}
+.muted{color:var(--muted)}
+.grid2{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:18px}
+.card{background:var(--panel);border-radius:var(--radius);padding:22px;text-align:left;display:flex;flex-direction:column;gap:8px;min-height:120px}
+.card .big{font-size:30px;font-weight:800}
+.card .emoji{font-size:40px}
+.player-card{align-items:center;text-align:center;min-height:220px;justify-content:center;border:4px solid transparent}
+.player-card .avatar{width:96px;height:96px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:44px;font-weight:900;color:#1d2b27}
+.player-card .name{font-size:30px;font-weight:800}
+.edit{font-size:18px;color:var(--muted);padding:10px 14px;background:var(--panel2);border-radius:12px;min-height:48px}
+.row{display:flex;gap:12px;align-items:center;flex-wrap:wrap}
+.spacer{flex:1}
+.progress{height:12px;background:var(--panel2);border-radius:999px;overflow:hidden}
+.progress>div{height:100%;background:var(--good);transition:width .5s}
+/* Kakooma board */
+.board{position:relative;margin:0 auto;width:min(92vw,620px);aspect-ratio:1/1;max-height:56vh}
+.board.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;aspect-ratio:auto;max-height:none;margin-top:14px}
+.tile{background:var(--tile);color:var(--tileInk);border-radius:22px;font-weight:900;font-size:clamp(30px,5.4vw,48px);
+  display:flex;align-items:center;justify-content:center;box-shadow:0 6px 0 rgba(0,0,0,.25);transition:background .2s,opacity .2s,transform .1s}
+.board:not(.grid) .tile{position:absolute;width:26%;height:26%;transform:translate(-50%,-50%)}
+.board:not(.grid) .tile:active{transform:translate(-50%,-50%) scale(.95)}
+.board.grid .tile{min-height:110px}
+.tile.frac{font-size:clamp(26px,4.6vw,40px)}
+.tile.good{background:var(--good)}
+.tile.bad{background:#cdb4db;animation:shake .4s}
+.tile.dim{opacity:.28}
+.tile.part{outline:6px solid var(--blue)}
+@keyframes shake{0%,100%{translate:0}25%{translate:-8px}75%{translate:8px}}
+.prompt{font-size:24px;text-align:center;font-weight:700}
+.hintbox{background:var(--panel);border-left:8px solid var(--accent);border-radius:16px;padding:16px 18px;font-size:21px;line-height:1.4;min-height:64px}
+.hintbox.reveal{border-left-color:var(--good)}
+.hintbox .eq{font-size:30px;font-weight:900;margin:6px 0}
+.actions{display:flex;gap:12px;justify-content:center;flex-wrap:wrap}
+.collected{display:flex;gap:10px;justify-content:center;flex-wrap:wrap}
+.collected span{background:var(--panel2);border-radius:12px;padding:8px 14px;font-size:22px;font-weight:800;min-width:54px;text-align:center}
+.collected span.done{background:var(--accent);color:#2a2105}
+/* keypad */
+.answer{font-size:44px;font-weight:900;text-align:center;min-height:62px;background:var(--panel);border-radius:18px;padding:6px;letter-spacing:2px}
+.problem{font-size:clamp(44px,8vw,72px);font-weight:900;text-align:center}
+.keypad{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;max-width:520px;width:100%;margin:0 auto}
+.key{background:var(--panel2);border-radius:18px;font-size:34px;font-weight:800;min-height:68px}
+.key.ok{background:var(--good);color:#0c2a1b}
+.choices{display:grid;grid-template-columns:repeat(2,1fr);gap:14px;max-width:640px;width:100%;margin:0 auto}
+.choice{background:var(--tile);color:var(--tileInk);border-radius:18px;font-size:34px;font-weight:900;min-height:88px;box-shadow:0 5px 0 rgba(0,0,0,.25)}
+.choice.text{font-size:24px;padding:12px}
+.choice.good{background:var(--good)}.choice.bad{background:#cdb4db;animation:shake .4s}
+.dots{width:100%;max-width:720px;margin:0 auto;background:var(--panel);border-radius:20px;display:block}
+.cover{position:relative}
+.cover .veil{position:absolute;inset:0;background:var(--panel);border-radius:20px;display:flex;align-items:center;justify-content:center;font-size:22px;color:var(--muted)}
+.idea{background:var(--panel);border-radius:20px;padding:24px;font-size:23px;line-height:1.5}
+.idea b{color:var(--accent)}
+.example{font-size:28px;font-weight:800;color:var(--blue);margin-top:10px}
+/* modal */
+.modal-bg{position:fixed;inset:0;background:rgba(0,0,0,.6);display:flex;align-items:center;justify-content:center;z-index:50;padding:20px}
+.modal{background:var(--panel);border-radius:24px;padding:28px;max-width:560px;width:100%;display:flex;flex-direction:column;gap:16px;text-align:center}
+.modal input{font-size:26px;padding:14px;border-radius:14px;border:0;width:100%;text-align:center;-webkit-user-select:text;user-select:text}
+/* parent */
+table{width:100%;border-collapse:collapse;font-size:18px}
+th,td{padding:8px 6px;text-align:center;border-bottom:1px solid var(--panel2)}
+.bars{display:flex;align-items:flex-end;gap:6px;height:120px;padding:8px 0}
+.bars div{flex:1;background:var(--blue);border-radius:6px 6px 0 0;min-height:3px;position:relative}
+.bars div.goal{background:var(--good)}
+.bars-labels{display:flex;gap:6px;font-size:12px;color:var(--muted)}.bars-labels span{flex:1;text-align:center}
+a{color:var(--blue)}
+.toast{position:fixed;left:50%;bottom:calc(30px + var(--safe-b));transform:translateX(-50%);background:var(--good);color:#0c2a1b;font-weight:800;font-size:22px;padding:14px 24px;border-radius:999px;z-index:60}
+@media (orientation:landscape) and (min-width:1000px){
+  .play-split{display:grid;grid-template-columns:1.25fr 1fr;gap:22px;align-items:start}
+  .board{max-height:66vh}
+}
+
+.dots{max-height:34vh}
+.screen{gap:14px}
+
+</style>
+</head>
+<body>
+<div id="app"></div>
+<script>
+/**
+ * Number Sense Lab — puzzle generation & validation (shared by app + node tests)
+ * Offline only. No network.
+ */
+(function (root, factory) {
+  if (typeof module !== 'undefined' && module.exports) module.exports = factory();
+  else root.NSLPuzzles = factory();
+})(typeof self !== 'undefined' ? self : this, function () {
+  'use strict';
+
+  function shuffle(arr) {
+    const a = arr.slice();
+    for (let i = a.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [a[i], a[j]] = [a[j], a[i]];
+    }
+    return a;
+  }
+
+  function gcd(a, b) {
+    a = Math.abs(a); b = Math.abs(b);
+    while (b) { const t = b; b = a % b; a = t; }
+    return a || 1;
+  }
+
+  function simplifyFrac(n, d) {
+    const g = gcd(n, d);
+    return { n: n / g, d: d / g };
+  }
+
+  function fracKey(f) { return f.n + '/' + f.d; }
+
+  function fracEqual(a, b) {
+    return a.n * b.d === b.n * a.d;
+  }
+
+  function fracAdd(a, b) {
+    const n = a.n * b.d + b.n * a.d;
+    const d = a.d * b.d;
+    return simplifyFrac(n, d);
+  }
+
+  function fracToString(f) {
+    if (f.d === 1) return String(f.n);
+    return f.n + '/' + f.d;
+  }
+
+  /** Count valid sum answers in a number list. Returns {answers: [{value, i, j, k}], ...} */
+  function findSumAnswers(nums) {
+    const answers = [];
+    const n = nums.length;
+    for (let k = 0; k < n; k++) {
+      for (let i = 0; i < n; i++) {
+        if (i === k) continue;
+        for (let j = i + 1; j < n; j++) {
+          if (j === k) continue;
+          if (nums[i] + nums[j] === nums[k]) {
+            answers.push({ value: nums[k], i, j, k, eq: nums[i] + ' + ' + nums[j] + ' = ' + nums[k] });
+          }
+        }
+      }
+    }
+    // unique by answer index k
+    const byK = {};
+    answers.forEach(a => { byK[a.k] = byK[a.k] || a; });
+    return Object.keys(byK).map(k => byK[k]);
+  }
+
+  function findProductAnswers(nums) {
+    const answers = [];
+    const n = nums.length;
+    for (let k = 0; k < n; k++) {
+      for (let i = 0; i < n; i++) {
+        if (i === k) continue;
+        for (let j = i + 1; j < n; j++) {
+          if (j === k) continue;
+          if (nums[i] * nums[j] === nums[k]) {
+            answers.push({ value: nums[k], i, j, k, eq: nums[i] + ' × ' + nums[j] + ' = ' + nums[k] });
+          }
+        }
+      }
+    }
+    const byK = {};
+    answers.forEach(a => { byK[a.k] = byK[a.k] || a; });
+    return Object.keys(byK).map(k => byK[k]);
+  }
+
+  function findFracSumAnswers(fracs) {
+    const answers = [];
+    const n = fracs.length;
+    for (let k = 0; k < n; k++) {
+      for (let i = 0; i < n; i++) {
+        if (i === k) continue;
+        for (let j = i + 1; j < n; j++) {
+          if (j === k) continue;
+          const s = fracAdd(fracs[i], fracs[j]);
+          if (fracEqual(s, fracs[k])) {
+            answers.push({
+              value: fracs[k],
+              i, j, k,
+              eq: fracToString(fracs[i]) + ' + ' + fracToString(fracs[j]) + ' = ' + fracToString(fracs[k])
+            });
+          }
+        }
+      }
+    }
+    const byK = {};
+    answers.forEach(a => { byK[a.k] = byK[a.k] || a; });
+    return Object.keys(byK).map(k => byK[k]);
+  }
+
+  function uniqueValues(nums) {
+    return new Set(nums).size === nums.length;
+  }
+
+  /**
+   * Generate one Kakooma-style puzzle with exactly one valid answer.
+   * mode: 'add25' | 'add99' | 'neg' | 'times9' | 'times12' | 'times20' | 'frac'
+   * groupSize: 4–9
+   */
+  function generateKakooma(mode, groupSize, maxAttempts) {
+    maxAttempts = maxAttempts || 120;
+    groupSize = Math.max(4, Math.min(9, groupSize | 0));
+
+    for (let attempt = 0; attempt < maxAttempts; attempt++) {
+      let puzzle;
+      if (mode === 'frac') puzzle = tryFrac(groupSize);
+      else if (mode.indexOf('times') === 0) puzzle = tryTimes(mode, groupSize);
+      else puzzle = tryAdd(mode, groupSize);
+
+      if (puzzle) return puzzle;
+    }
+    return null;
+  }
+
+  function tryAdd(mode, groupSize) {
+    let minN, maxN;
+    if (mode === 'add12') { minN = 1; maxN = 11; }
+    else if (mode === 'add25') { minN = 1; maxN = 24; }
+    else if (mode === 'add99') { minN = 1; maxN = 90; }
+    else if (mode === 'neg') { minN = -15; maxN = 15; }
+    else { minN = 1; maxN = 24; }
+
+    // pick two addends and sum
+    let a, b, sum;
+    if (mode === 'neg') {
+      a = randInt(minN, maxN);
+      b = randInt(minN, maxN);
+      sum = a + b;
+      if (sum < -15 || sum > 15) return null;
+      if (sum === a || sum === b) return null;
+    } else {
+      const sumCap = mode === 'add99' ? 99 : (mode === 'add12' ? 12 : 25);
+      a = randInt(1, Math.min(maxN, sumCap - 1));
+      b = randInt(1, Math.min(maxN, sumCap - a));
+      sum = a + b;
+      if (sum > sumCap) return null;
+    }
+
+    const nums = [a, b, sum];
+    const used = new Set(nums);
+
+    // distractors: near-misses preferred (bounded attempts)
+    let guard = 0;
+    while (nums.length < groupSize) {
+      if (++guard > 400) return null;
+      let d;
+      if (mode === 'neg') d = randInt(minN, maxN);
+      else {
+        const roll = Math.random();
+        const sumCap = mode === 'add99' ? 99 : (mode === 'add12' ? 12 : 25);
+        if (roll < 0.4) d = randInt(Math.max(1, sum - 8), Math.min(sumCap, sum + 8));
+        else if (roll < 0.7) d = a + randInt(1, 6);
+        else d = randInt(1, mode === 'add99' ? 90 : (mode === 'add12' ? 12 : 24));
+        if (d < 1 || d > sumCap) continue;
+      }
+      if (used.has(d)) continue;
+      const trial = nums.concat([d]);
+      if (!uniqueValues(trial)) continue;
+      const answers = findSumAnswers(trial);
+      if (answers.length > 1) continue;
+      nums.push(d);
+      used.add(d);
+    }
+
+    if (!uniqueValues(nums)) return null;
+    const answers = findSumAnswers(nums);
+    if (answers.length !== 1) return null;
+    if (answers[0].value !== sum) return null;
+
+    return {
+      mode: mode,
+      op: 'sum',
+      numbers: shuffle(nums),
+      answer: sum,
+      equation: a + ' + ' + b + ' = ' + sum,
+      parts: [a, b],
+      groupSize: groupSize
+    };
+  }
+
+  function tryTimes(mode, groupSize) {
+    let maxF = 9;
+    if (mode === 'times12') maxF = 12;
+    if (mode === 'times20') maxF = 20;
+
+    const a = randInt(2, maxF);
+    const b = randInt(2, maxF);
+    const prod = a * b;
+    if (a === b || a === prod || b === prod) return null;
+
+    const nums = [a, b, prod];
+    const used = new Set(nums);
+
+    let guard = 0;
+    while (nums.length < groupSize) {
+      if (++guard > 400) return null;
+      let d;
+      const roll = Math.random();
+      if (roll < 0.35) d = randInt(2, maxF) * randInt(2, Math.min(maxF, 6));
+      else if (roll < 0.6) d = randInt(2, maxF);
+      else d = prod + randInt(-6, 6);
+      if (d < 2 || d > maxF * maxF) continue;
+      if (used.has(d)) continue;
+      const trial = nums.concat([d]);
+      if (!uniqueValues(trial)) continue;
+      const answers = findProductAnswers(trial);
+      if (answers.length > 1) continue;
+      nums.push(d);
+      used.add(d);
+    }
+
+    if (!uniqueValues(nums)) return null;
+    const answers = findProductAnswers(nums);
+    if (answers.length !== 1) return null;
+    if (answers[0].value !== prod) return null;
+
+    return {
+      mode: mode,
+      op: 'product',
+      numbers: shuffle(nums),
+      answer: prod,
+      equation: a + ' × ' + b + ' = ' + prod,
+      parts: [a, b],
+      groupSize: groupSize
+    };
+  }
+
+  function tryFrac(groupSize) {
+    // common denominators: 2,3,4,6,8,12
+    const base = [6, 8, 12][randInt(0, 2)];
+    const dens = [2, 3, 4, 6, 8, 12].filter(x => base % x === 0);
+    const d1 = dens[randInt(0, dens.length - 1)];
+    const d2 = dens[randInt(0, dens.length - 1)];
+    const n1 = randInt(1, d1 - 1);
+    const n2 = randInt(1, d2 - 1);
+    const f1 = simplifyFrac(n1, d1);
+    const f2 = simplifyFrac(n2, d2);
+    const sum = fracAdd(f1, f2);
+    if (sum.n >= sum.d * 2) return null; // keep reasonable
+    if (fracEqual(sum, f1) || fracEqual(sum, f2) || fracEqual(f1, f2)) return null;
+
+    const fracs = [f1, f2, sum];
+    const keys = new Set(fracs.map(fracKey));
+
+    let guard = 0;
+    while (fracs.length < groupSize) {
+      if (++guard > 400) return null;
+      const d = dens[randInt(0, dens.length - 1)];
+      const n = randInt(1, d);
+      const f = simplifyFrac(n, d);
+      if (keys.has(fracKey(f))) continue;
+      const trial = fracs.concat([f]);
+      const answers = findFracSumAnswers(trial);
+      if (answers.length > 1) continue;
+      fracs.push(f);
+      keys.add(fracKey(f));
+    }
+
+    const answers = findFracSumAnswers(fracs);
+    if (answers.length !== 1) return null;
+    if (!fracEqual(answers[0].value, sum)) return null;
+
+    const display = shuffle(fracs.map(fracToString));
+    return {
+      mode: 'frac',
+      op: 'sum',
+      numbers: display,
+      answer: fracToString(sum),
+      answerFrac: sum,
+      equation: fracToString(f1) + ' + ' + fracToString(f2) + ' = ' + fracToString(sum),
+      parts: [fracToString(f1), fracToString(f2)],
+      commonDen: base,
+      groupSize: groupSize,
+      isFraction: true
+    };
+  }
+
+  function randInt(lo, hi) {
+    return lo + Math.floor(Math.random() * (hi - lo + 1));
+  }
+
+  /** Verify a puzzle has exactly one valid answer */
+  function validatePuzzle(p) {
+    if (!p || !p.numbers || p.numbers.length < 3) return false;
+    if (p.isFraction) {
+      const fracs = p.numbers.map(s => {
+        const parts = String(s).split('/');
+        if (parts.length === 1) return { n: +parts[0], d: 1 };
+        return simplifyFrac(+parts[0], +parts[1]);
+      });
+      const ans = findFracSumAnswers(fracs);
+      return ans.length === 1 && fracToString(ans[0].value) === String(p.answer);
+    }
+    const nums = p.numbers.map(Number);
+    if (p.op === 'product') {
+      const ans = findProductAnswers(nums);
+      return ans.length === 1 && ans[0].value === p.answer;
+    }
+    const ans = findSumAnswers(nums);
+    return ans.length === 1 && ans[0].value === p.answer;
+  }
+
+  /** Puzzle-in-a-puzzle: N mini puzzles, then final from their answers */
+  function generateMetaPuzzle(mode, miniCount, groupSize) {
+    miniCount = miniCount || 5;
+    groupSize = groupSize || 5;
+    const maxOuter = 400;
+    for (let outer = 0; outer < maxOuter; outer++) {
+      const minis = [];
+      const answers = [];
+      let ok = true;
+      for (let i = 0; i < miniCount; i++) {
+        const p = generateKakooma(mode, groupSize, 80);
+        if (!p || !validatePuzzle(p)) { ok = false; break; }
+        minis.push(p);
+        answers.push(p.answer);
+      }
+      if (!ok) continue;
+      // For times modes, final puzzle uses addition of the products (per Tang docs)
+      let final;
+      if (mode.indexOf('times') === 0) {
+        // build addition puzzle whose numbers ARE the answers — need exactly one sum relation
+        const ansNums = answers.map(Number);
+        if (new Set(ansNums).size !== ansNums.length) continue;
+        const sumAns = findSumAnswers(ansNums);
+        if (sumAns.length !== 1) continue;
+        final = {
+          mode: 'add-from-times',
+          op: 'sum',
+          numbers: shuffle(ansNums),
+          answer: sumAns[0].value,
+          equation: sumAns[0].eq,
+          parts: [ansNums[sumAns[0].i], ansNums[sumAns[0].j]],
+          groupSize: miniCount
+        };
+      } else if (mode === 'frac') {
+        const fracs = answers.map(s => {
+          const parts = String(s).split('/');
+          if (parts.length === 1) return { n: +parts[0], d: 1 };
+          return simplifyFrac(+parts[0], +parts[1]);
+        });
+        if (new Set(fracs.map(fracKey)).size !== fracs.length) continue;
+        const sumAns = findFracSumAnswers(fracs);
+        if (sumAns.length !== 1) continue;
+        final = {
+          mode: 'frac',
+          op: 'sum',
+          numbers: shuffle(fracs.map(fracToString)),
+          answer: fracToString(sumAns[0].value),
+          equation: sumAns[0].eq,
+          parts: [fracToString(fracs[sumAns[0].i]), fracToString(fracs[sumAns[0].j])],
+          commonDen: 24,
+          groupSize: miniCount,
+          isFraction: true
+        };
+      } else {
+        const ansNums = answers.map(Number);
+        if (new Set(ansNums).size !== ansNums.length) continue;
+        const sumAns = findSumAnswers(ansNums);
+        if (sumAns.length !== 1) continue;
+        final = {
+          mode: mode,
+          op: 'sum',
+          numbers: shuffle(ansNums),
+          answer: sumAns[0].value,
+          equation: sumAns[0].eq,
+          parts: [ansNums[sumAns[0].i], ansNums[sumAns[0].j]],
+          groupSize: miniCount
+        };
+      }
+      return { minis, final, mode, miniCount, groupSize };
+    }
+    return null;
+  }
+
+  // --- See the Groups (Grapes-of-Math-style visual grouping) ---
+  // Returns dots in a 0..100 x 0..H coordinate space, each with group index g.
+  function generatePattern(level) {
+    level = Math.max(0, Math.min(3, level | 0));
+    const kinds = ['rows', 'tenframes', 'pairs10', 'missing', 'diagonal', 'equal'];
+    const kind = kinds[randInt(0, kinds.length - 1)];
+    const big = level >= 2;
+    let dots = [], gaps = [], total, explain, hint1, hint2, H = 70;
+
+    if (kind === 'rows') {
+      const R = randInt(3, big ? 6 : 4), C = randInt(4, big ? 9 : 6);
+      const sx = 90 / C, sy = Math.min(14, 60 / R);
+      for (let r = 0; r < R; r++) for (let c = 0; c < C; c++)
+        dots.push({ x: 5 + sx * (c + 0.5), y: 5 + sy * (r + 0.5), g: r });
+      H = 10 + sy * R;
+      total = R * C;
+      explain = R + ' rows of ' + C + ': ' + R + ' × ' + C + ' = ' + total;
+      hint1 = 'Do you see equal rows? How many rows are there, and how many dots in each?';
+      hint2 = 'There are ' + R + ' rows. How many dots are in one row? Now multiply.';
+    } else if (kind === 'tenframes') {
+      const k = randInt(1, big ? 5 : 3), extra = randInt(1, 9);
+      const frames = k + 1, perRow = Math.min(frames, 3);
+      const fw = 90 / perRow, cell = Math.min(fw / 5.6, 7);
+      for (let f = 0; f < frames; f++) {
+        const fx = 5 + (f % perRow) * fw, fy = 5 + Math.floor(f / perRow) * (cell * 2 + 8);
+        const n = f < k ? 10 : extra;
+        for (let i = 0; i < 10; i++) {
+          const x = fx + cell * (i % 5 + 0.5), y = fy + cell * (Math.floor(i / 5) + 0.5);
+          if (i < n) dots.push({ x, y, g: f }); else gaps.push({ x, y });
+        }
+      }
+      H = 10 + Math.ceil(frames / perRow) * (cell * 2 + 8);
+      total = k * 10 + extra;
+      explain = k + ' full tens = ' + (k * 10) + ', plus ' + extra + ' more = ' + total;
+      hint1 = 'Each frame holds 10 when it’s full. How many frames are full?';
+      hint2 = 'There are ' + k + ' full frames, so ' + (k * 10) + '. How many dots are in the last frame?';
+    } else if (kind === 'pairs10') {
+      const n = randInt(2, big ? 5 : 3);
+      const bunches = [];
+      for (let i = 0; i < n; i++) { const a = randInt(1, 9); bunches.push({ size: a, g: i }, { size: 10 - a, g: i }); }
+      const order = shuffle(bunches);
+      const cols = Math.min(order.length, 4), rows = Math.ceil(order.length / cols);
+      const cw = 90 / cols, ch = 26;
+      order.forEach((b, idx) => {
+        const cx = 5 + cw * (idx % cols + 0.5), cy = 5 + ch * (Math.floor(idx / cols) + 0.5);
+        clusterPositions(b.size, cx, cy, 4.2).forEach(pt => dots.push({ x: pt.x, y: pt.y, g: b.g }));
+      });
+      H = 10 + ch * rows;
+      total = n * 10;
+      explain = 'The bunches pair up to make 10. ' + n + ' pairs × 10 = ' + total;
+      hint1 = 'Can you find two bunches that make 10 together?';
+      hint2 = 'Every bunch has a partner that makes 10. How many pairs are there?';
+    } else if (kind === 'missing') {
+      const R = randInt(4, big ? 6 : 5), C = randInt(4, big ? 8 : 6), m = randInt(2, big ? 6 : 4);
+      const missIdx = new Set();
+      while (missIdx.size < m) missIdx.add(randInt(0, R * C - 1));
+      const sx = 90 / C, sy = Math.min(12, 60 / R);
+      for (let r = 0; r < R; r++) for (let c = 0; c < C; c++) {
+        const pt = { x: 5 + sx * (c + 0.5), y: 5 + sy * (r + 0.5) };
+        if (missIdx.has(r * C + c)) gaps.push(pt); else dots.push(Object.assign(pt, { g: r }));
+      }
+      H = 10 + sy * R;
+      total = R * C - m;
+      explain = 'Full block: ' + R + ' × ' + C + ' = ' + (R * C) + ', minus ' + m + ' gaps = ' + total;
+      hint1 = 'What if the empty spots were filled in? How many would the full block have?';
+      hint2 = 'The full block is ' + R + ' × ' + C + ' = ' + (R * C) + '. How many spots are empty?';
+    } else if (kind === 'diagonal') {
+      const n = randInt(3, big ? 7 : 5);
+      const s = Math.min(80 / (2 * n - 1), 9);
+      for (let i = 0; i < n; i++) for (let j = 0; j < n; j++)
+        dots.push({ x: 50 + (i - j) * s, y: 6 + (i + j) * s, g: i });
+      H = 12 + (2 * n - 2) * s;
+      total = n * n;
+      explain = 'Tilt your head: ' + n + ' slanted lines of ' + n + '. ' + n + ' × ' + n + ' = ' + total;
+      hint1 = 'Rows look uneven… Try looking along a slant. Do the dots line up in equal lines?';
+      hint2 = 'Along the slant there are ' + n + ' lines. How many dots in each line?';
+    } else {
+      const k = randInt(3, big ? 7 : 5), m = randInt(3, big ? 9 : 6);
+      const cols = Math.min(k, 4), rows = Math.ceil(k / cols), cw = 90 / cols, ch = 24;
+      for (let gI = 0; gI < k; gI++) {
+        const cx = 5 + cw * (gI % cols + 0.5), cy = 5 + ch * (Math.floor(gI / cols) + 0.5);
+        dicePositions(m, cx, cy, 4.5).forEach(pt => dots.push({ x: pt.x, y: pt.y, g: gI }));
+      }
+      H = 10 + ch * rows;
+      total = k * m;
+      explain = k + ' equal groups of ' + m + ': ' + k + ' × ' + m + ' = ' + total;
+      hint1 = 'Are all the groups the same size? How many groups are there?';
+      hint2 = 'There are ' + k + ' groups. How many dots in one group? Now multiply.';
+    }
+    const strategies = {
+      rows: 'Equal rows, then multiply',
+      tenframes: 'Full tens, plus the extra',
+      pairs10: 'Pairs that make 10',
+      missing: 'Full block, minus the gaps',
+      diagonal: 'Equal slanted lines',
+      equal: 'Equal groups, then multiply'
+    };
+    const others = shuffle(Object.keys(strategies).filter(x => x !== kind)).slice(0, 1);
+    const strategyChoices = shuffle([kind].concat(others).map(id => ({ id, label: strategies[id] })))
+      .concat([{ id: 'count', label: 'I counted one by one' }]);
+    return {
+      kind, total, dots, gaps, H, explain, hint1, hint2,
+      strategyLabel: strategies[kind], strategyChoices,
+      choices: shuffle(uniqueNearChoices(total, 4))
+    };
+  }
+
+  function clusterPositions(n, cx, cy, r) {
+    const pts = [];
+    if (n === 1) return [{ x: cx, y: cy }];
+    // concentric rings
+    let placed = 0, ring = 0;
+    while (placed < n) {
+      if (ring === 0) { pts.push({ x: cx, y: cy }); placed++; ring++; continue; }
+      const cap = 6 * ring;
+      const here = Math.min(cap, n - placed);
+      for (let i = 0; i < here; i++) {
+        const a = (2 * Math.PI * i) / here + ring * 0.4;
+        pts.push({ x: cx + Math.cos(a) * r * ring, y: cy + Math.sin(a) * r * ring });
+      }
+      placed += here; ring++;
+    }
+    return pts;
+  }
+
+  function dicePositions(n, cx, cy, s) {
+    const L = {
+      1: [[0, 0]], 2: [[-1, -1], [1, 1]], 3: [[-1, -1], [0, 0], [1, 1]],
+      4: [[-1, -1], [1, -1], [-1, 1], [1, 1]], 5: [[-1, -1], [1, -1], [0, 0], [-1, 1], [1, 1]],
+      6: [[-1, -1], [1, -1], [-1, 0], [1, 0], [-1, 1], [1, 1]],
+      7: [[-1, -1], [1, -1], [-1, 0], [0, 0], [1, 0], [-1, 1], [1, 1]],
+      8: [[-1, -1], [0, -1], [1, -1], [-1, 0], [1, 0], [-1, 1], [0, 1], [1, 1]],
+      9: [[-1, -1], [0, -1], [1, -1], [-1, 0], [0, 0], [1, 0], [-1, 1], [0, 1], [1, 1]]
+    }[n];
+    return L.map(([dx, dy]) => ({ x: cx + dx * s, y: cy + dy * s }));
+  }
+
+  function uniqueNearChoices(correct, count) {
+    const set = new Set([correct]);
+    let guard = 0;
+    while (set.size < count && guard++ < 200) {
+      const spread = Math.max(3, Math.round(correct * 0.15));
+      const d = correct + randInt(-spread, spread);
+      if (d > 0 && d !== correct) set.add(d);
+    }
+    let k = 1;
+    while (set.size < count) set.add(correct + k++);
+    return [...set];
+  }
+
+  // --- Make a Ten (friendly numbers) ---
+  const MAKE_TEN_LEVELS = 5;
+  function generateMakeTen(level) {
+    level = Math.max(0, Math.min(MAKE_TEN_LEVELS - 1, level | 0));
+    for (let guard = 0; guard < 200; guard++) {
+      if (level === 0) {
+        const a = randInt(6, 9), b = randInt(3, 9), need = 10 - a, rest = b - need;
+        if (rest <= 0) continue;
+        return {
+          level, a, b, prompt: a + ' + ' + b, answer: a + b,
+          idea: 'Finish a 10 first, then add what’s left.',
+          hint1: 'Which two numbers make a ten? How much does ' + a + ' need to reach 10?',
+          hint2: a + ' needs ' + need + '. Split ' + b + ' into ' + need + ' and ' + rest + '. So 10 + ' + rest + ' = ?',
+          explain: a + ' + ' + b + ' = ' + a + ' + ' + need + ' + ' + rest + ' = 10 + ' + rest + ' = ' + (a + b)
+        };
+      }
+      if (level === 1) {
+        const top = randInt(11, 18), sub = randInt(3, 9), toTen = top - 10, rest = sub - toTen;
+        if (rest <= 0) continue;
+        return {
+          level, prompt: top + ' − ' + sub, answer: top - sub,
+          idea: 'Subtract down to 10 first, then take away the rest.',
+          hint1: 'How much do you take from ' + top + ' to land exactly on 10?',
+          hint2: top + ' − ' + toTen + ' = 10. You still need to take away ' + rest + ' more. 10 − ' + rest + ' = ?',
+          explain: top + ' − ' + sub + ' = ' + top + ' − ' + toTen + ' − ' + rest + ' = 10 − ' + rest + ' = ' + (top - sub)
+        };
+      }
+      if (level === 2) {
+        const a = randInt(21, 79), b = randInt(21, 79), toNext = (10 - (a % 10)) % 10;
+        if (toNext === 0 || toNext > 4 || b - toNext <= 0) continue;
+        const f = a + toNext, o = b - toNext;
+        return {
+          level, prompt: a + ' + ' + b, answer: a + b,
+          idea: 'Slide a little from one number to the other so one becomes a round ten.',
+          hint1: 'How close is ' + a + ' to a round ten? How much would it need?',
+          hint2: 'Move ' + toNext + ' from ' + b + ' over to ' + a + '. Now it’s ' + f + ' + ' + o + '.',
+          explain: a + ' + ' + b + ' = ' + f + ' + ' + o + ' = ' + (a + b) + ' (same total, easier numbers)'
+        };
+      }
+      if (level === 3) {
+        const a = randInt(12, 88);
+        if (a % 10 === 0) continue;
+        const up = 10 - (a % 10), nextTen = a + up;
+        return {
+          level, prompt: a + ' + ? = 100', answer: 100 - a,
+          idea: 'Make 100 in two hops: first up to the next ten, then up to 100.',
+          hint1: 'What’s the next round ten after ' + a + '? How far is it?',
+          hint2: a + ' + ' + up + ' = ' + nextTen + '. How far is ' + nextTen + ' from 100?',
+          explain: a + ' + ' + up + ' = ' + nextTen + ', then ' + nextTen + ' + ' + (100 - nextTen) + ' = 100. So ' + up + ' + ' + (100 - nextTen) + ' = ' + (100 - a)
+        };
+      }
+      // level 4: make 10s to subtract (2-digit)
+      const top = randInt(41, 98), sub = randInt(13, top - 5);
+      const down = top % 10;
+      if (down === 0 || down >= sub) continue;
+      if ((sub % 10) <= down) continue; // only cases where regrouping would be needed
+      const tenT = top - down, rest = sub - down;
+      return {
+        level, prompt: top + ' − ' + sub, answer: top - sub,
+        idea: 'Subtract down to a round ten first, then subtract the rest from the friendly number.',
+        hint1: 'How much do you subtract from ' + top + ' to land on a round ten?',
+        hint2: top + ' − ' + down + ' = ' + tenT + '. You still need to subtract ' + rest + '. ' + tenT + ' − ' + rest + ' = ?',
+        explain: top + ' − ' + sub + ' = ' + top + ' − ' + down + ' − ' + rest + ' = ' + tenT + ' − ' + rest + ' = ' + (top - sub)
+      };
+    }
+    return { level: 0, prompt: '8 + 5', answer: 13, idea: '', hint1: 'How much does 8 need to make 10?', hint2: '8 + 2 = 10, then 3 more.', explain: '8 + 5 = 8 + 2 + 3 = 13' };
+  }
+
+  // --- Break It Apart (partial products / number bonds for multiplying) ---
+  const BREAK_LEVELS = 4;
+  function generateBreakApart(level) {
+    level = Math.max(0, Math.min(BREAK_LEVELS - 1, level | 0));
+    let a, b, good, bad, explain, hint1, hint2, idea, prompt;
+    if (level === 0) {
+      a = randInt(6, 9); b = randInt(3, 9);
+      const r = a - 5;
+      prompt = a + ' × ' + b;
+      idea = 'Hard facts are easy facts glued together. ' + a + ' = 5 + ' + r + '.';
+      good = '5×' + b + ' + ' + r + '×' + b;
+      bad = ['5×' + b + ' + ' + (r + 1) + '×' + b, '5×' + b + ' + ' + r + '×' + (b + 1)];
+      explain = a + ' × ' + b + ' = 5×' + b + ' + ' + r + '×' + b + ' = ' + (5 * b) + ' + ' + (r * b) + ' = ' + (a * b);
+      hint1 = 'What is 5×' + b + '? And what is ' + r + '×' + b + '?';
+      hint2 = '5×' + b + ' = ' + (5 * b) + '. Now add ' + r + '×' + b + ' = ' + (r * b) + '.';
+    } else if (level === 1) {
+      a = randInt(11, 12); b = randInt(4, 9);
+      const r = a - 10;
+      prompt = a + ' × ' + b;
+      idea = 'Tens are easy! ' + a + ' = 10 + ' + r + '.';
+      good = '10×' + b + ' + ' + r + '×' + b;
+      bad = ['10×' + b + ' + ' + (r + 1) + '×' + b, '10×' + (b + 1) + ' + ' + r + '×' + b];
+      explain = a + ' × ' + b + ' = 10×' + b + ' + ' + r + '×' + b + ' = ' + (10 * b) + ' + ' + (r * b) + ' = ' + (a * b);
+      hint1 = 'What is 10×' + b + '? What is ' + r + '×' + b + '?';
+      hint2 = '10×' + b + ' = ' + (10 * b) + '. Add ' + r + '×' + b + ' = ' + (r * b) + '.';
+    } else if (level === 2) {
+      a = 9; b = randInt(4, 12);
+      prompt = '9 × ' + b;
+      idea = 'Subtract to add: 9 groups is 10 groups minus 1 group.';
+      good = '10×' + b + ' − 1×' + b;
+      bad = ['10×' + b + ' − 9', '10×' + b + ' + 1×' + b];
+      explain = '9 × ' + b + ' = 10×' + b + ' − ' + b + ' = ' + (10 * b) + ' − ' + b + ' = ' + (9 * b);
+      hint1 = 'What is 10×' + b + '? Is 9 groups more or less than that?';
+      hint2 = '10×' + b + ' = ' + (10 * b) + '. Take away one group of ' + b + '.';
+    } else {
+      const t = randInt(2, 9) * 10, o = randInt(1, 9);
+      a = t + o; b = randInt(3, 9);
+      prompt = a + ' × ' + b;
+      idea = 'Break the big number into tens and ones, multiply each part, then add.';
+      good = t + '×' + b + ' + ' + o + '×' + b;
+      bad = [t + '×' + b + ' + ' + o, t + ' + ' + o + '×' + b];
+      explain = a + ' × ' + b + ' = ' + t + '×' + b + ' + ' + o + '×' + b + ' = ' + (t * b) + ' + ' + (o * b) + ' = ' + (a * b);
+      hint1 = 'What is ' + t + '×' + b + '? (Think ' + (t / 10) + '×' + b + ', then add a zero.)';
+      hint2 = t + '×' + b + ' = ' + (t * b) + '. Now add ' + o + '×' + b + ' = ' + (o * b) + '.';
+    }
+    return {
+      level, prompt, answer: a * b, idea, explain, hint1, hint2,
+      splitGood: good,
+      splitChoices: shuffle([{ text: good, ok: true }].concat(bad.map(x => ({ text: x, ok: false }))))
+    };
+  }
+
+
+  // --- Foundations path (Kate) ---
+  const PATH_SKILLS = [
+    { id: 'see', title: 'See It', blurb: 'See how many without counting one by one' },
+    { id: 'bonds', title: 'Bonds to 10', blurb: 'Partners that make 10' },
+    { id: 'make10', title: 'Make a Ten', blurb: 'Add by finishing a 10 first' },
+    { id: 'thinkAdd', title: 'Think Addition', blurb: 'Subtract by thinking of the missing part' },
+    { id: 'chunks', title: 'Chunks to 100', blurb: 'Add and subtract with friendly tens' },
+    { id: 'mult', title: '× Strategies', blurb: 'Build facts from ones you know' },
+    { id: 'div', title: '÷ Think ×', blurb: 'Division is a multiplication you already know' }
+  ];
+
+  function generateSeeIt(level) {
+    level = Math.max(0, Math.min(3, level | 0));
+    const kinds = level === 0 ? ['five', 'dice'] : level === 1 ? ['ten', 'five', 'dice'] : ['ten', 'doubleten', 'rows'];
+    const kind = kinds[randInt(0, kinds.length - 1)];
+    let total, dots = [], gaps = [], H = 70, hint1, hint2, explain, frameNote;
+    if (kind === 'five') {
+      total = randInt(1, 5);
+      for (let i = 0; i < 5; i++) {
+        const pt = { x: 22 + i * 14, y: 14 };
+        if (i < total) dots.push(Object.assign({}, pt, { g: 0 })); else gaps.push(pt);
+      }
+      frameNote = 'five'; H = 28;
+      explain = total + ' on a five-frame — see the pattern, no need to count each one.';
+      hint1 = 'Is the frame full, almost full, or just a few?';
+      hint2 = 'A full five-frame is 5. How many filled spots?';
+    } else if (kind === 'ten') {
+      total = randInt(1, 10);
+      for (let i = 0; i < 10; i++) {
+        const pt = { x: 20 + (i % 5) * 15, y: 12 + Math.floor(i / 5) * 15 };
+        if (i < total) dots.push(Object.assign({}, pt, { g: Math.floor(i / 5) })); else gaps.push(pt);
+      }
+      frameNote = 'ten'; H = 40;
+      explain = total <= 5 ? total + ' (top row).' : '5 on top + ' + (total - 5) + ' on bottom = ' + total + '.';
+      hint1 = 'Look at the top row first — how many? Then the bottom.';
+      hint2 = total <= 5 ? 'Only the top row has dots.' : 'Top row is full (5). How many on the bottom?';
+    } else if (kind === 'doubleten') {
+      const b = randInt(1, 10);
+      total = 10 + b;
+      for (let f = 0; f < 2; f++) {
+        const n = f === 0 ? 10 : b;
+        for (let i = 0; i < 10; i++) {
+          const pt = { x: 10 + f * 46 + (i % 5) * 8.5, y: 10 + Math.floor(i / 5) * 8.5 };
+          if (i < n) dots.push(Object.assign({}, pt, { g: f })); else gaps.push(pt);
+        }
+      }
+      frameNote = 'double'; H = 30;
+      explain = '1 full ten + ' + b + ' = ' + total;
+      hint1 = 'Is one frame completely full? That frame is a 10.';
+      hint2 = 'Full frame = 10. How many in the other frame?';
+    } else if (kind === 'dice') {
+      total = randInt(1, 9);
+      dicePositions(total, 50, 22, 9).forEach(pt => dots.push(Object.assign(pt, { g: 0 })));
+      frameNote = 'dice'; H = 44;
+      explain = 'Dice pattern for ' + total + ' — your eyes learn the shape.';
+      hint1 = 'Have you seen this pattern on a die or domino?';
+      hint2 = 'Corners and center make a familiar shape. What number is it?';
+    } else {
+      const R = randInt(2, 4), C = randInt(3, 5);
+      total = R * C;
+      for (let r = 0; r < R; r++) for (let c = 0; c < C; c++)
+        dots.push({ x: 20 + c * (60 / C), y: 8 + r * 12, g: r });
+      frameNote = 'rows'; H = 8 + R * 12;
+      explain = R + ' rows of ' + C + ' = ' + total;
+      hint1 = 'Do you see equal rows?';
+      hint2 = R + ' rows. How many in each row?';
+    }
+    return { kind, total, dots, gaps, H, explain, hint1, hint2, frameNote,
+      choices: shuffle(uniqueNearChoices(total, 4)),
+      idea: 'Your eyes can see groups. Five-frames and ten-frames stick in your brain — faster than fingers!' };
+  }
+
+  function generateBonds(level) {
+    level = Math.max(0, Math.min(2, level | 0));
+    const total = level === 0 ? 10 : (level === 1 ? [5, 6, 7, 8, 9, 10][randInt(0, 5)] : 10);
+    const a = randInt(1, total - 1);
+    const answer = total - a;
+    return {
+      type: 'bond', total, a, answer, showFrame: true,
+      prompt: a + ' + ? = ' + total,
+      idea: 'A number bond is three friends that belong together. Total ' + total + ', one part ' + a + ' — what’s the other?',
+      hint1: 'How far is ' + a + ' from ' + total + '?',
+      hint2: total + ' − ' + a + ' = ?',
+      explain: a + ' + ' + answer + ' = ' + total + '. Bond: ' + a + ', ' + answer + ', ' + total + '.',
+      choices: shuffle(uniqueNearChoices(answer, 4))
+    };
+  }
+
+  function generateThinkAdd(level) {
+    level = Math.max(0, Math.min(2, level | 0));
+    let total, sub;
+    if (level === 0) { total = randInt(6, 10); sub = randInt(1, total - 1); }
+    else if (level === 1) { total = randInt(11, 20); sub = randInt(2, Math.min(9, total - 1)); }
+    else { total = randInt(20, 50); sub = randInt(5, Math.min(19, total - 1)); }
+    const answer = total - sub;
+    return {
+      type: 'thinkAdd', total, sub, answer,
+      prompt: total + ' − ' + sub,
+      idea: 'Subtraction is a missing-part puzzle. Think: ' + sub + ' + ? = ' + total,
+      hint1: 'What number goes with ' + sub + ' to make ' + total + '?',
+      hint2: 'Start at ' + sub + ' and count up to ' + total + '. How many steps?',
+      explain: sub + ' + ' + answer + ' = ' + total + ', so ' + total + ' − ' + sub + ' = ' + answer + '.',
+      choices: shuffle(uniqueNearChoices(answer, 4))
+    };
+  }
+
+  function generateChunks(level) {
+    return generateMakeTen(Math.min(4, 2 + (level | 0)));
+  }
+
+  function generateMultStrat(level) {
+    level = Math.max(0, Math.min(4, level | 0));
+    if (level === 0) {
+      const n = randInt(3, 12);
+      return { level, prompt: '2 × ' + n, answer: 2 * n, idea: '×2 means double.',
+        hint1: 'What is ' + n + ' + ' + n + '?', hint2: 'Double ' + n + '.',
+        explain: '2 × ' + n + ' = ' + n + ' + ' + n + ' = ' + (2 * n),
+        splitGood: n + ' + ' + n,
+        splitChoices: shuffle([{ text: n + ' + ' + n, ok: true }, { text: n + ' + 2', ok: false }, { text: n + ' + ' + (n + 1), ok: false }]) };
+    }
+    if (level === 1) {
+      const n = randInt(3, 12);
+      return { level, prompt: '5 × ' + n, answer: 5 * n, idea: '×5 is half of ×10.',
+        hint1: 'What is 10 × ' + n + '?', hint2: '10 × ' + n + ' = ' + (10 * n) + '. Half is…',
+        explain: '5 × ' + n + ' = half of ' + (10 * n) + ' = ' + (5 * n),
+        splitGood: '(10×' + n + ') ÷ 2',
+        splitChoices: shuffle([{ text: '(10×' + n + ') ÷ 2', ok: true }, { text: '10×' + n + ' − 5', ok: false }, { text: n + ' + 5', ok: false }]) };
+    }
+    if (level === 2) {
+      const n = randInt(2, 12);
+      return { level, prompt: '10 × ' + n, answer: 10 * n, idea: '×10: write the number and add a zero.',
+        hint1: 'What do you write after ' + n + ' for ×10?', hint2: 'Put a 0 on the end of ' + n + '.',
+        explain: '10 × ' + n + ' = ' + (10 * n),
+        splitGood: String(10 * n),
+        splitChoices: shuffle([{ text: String(10 * n), ok: true }, { text: String(n) + '00', ok: false }, { text: String(n + 10), ok: false }]) };
+    }
+    if (level === 3) {
+      const n = randInt(3, 12);
+      return { level, prompt: '9 × ' + n, answer: 9 * n, idea: '×9 = ×10 minus one group.',
+        hint1: 'What is 10 × ' + n + '?', hint2: 'Take away one group of ' + n + ' from ' + (10 * n) + '.',
+        explain: '9 × ' + n + ' = ' + (10 * n) + ' − ' + n + ' = ' + (9 * n),
+        splitGood: '10×' + n + ' − ' + n,
+        splitChoices: shuffle([{ text: '10×' + n + ' − ' + n, ok: true }, { text: '10×' + n + ' + ' + n, ok: false }, { text: '10×' + n + ' − 9', ok: false }]) };
+    }
+    return generateBreakApart(0);
+  }
+
+  function generateDivThink(level) {
+    level = Math.max(0, Math.min(2, level | 0));
+    let a, b;
+    if (level === 0) { b = [2, 5, 10][randInt(0, 2)]; a = randInt(2, 10); }
+    else if (level === 1) { b = randInt(2, 9); a = randInt(2, 10); }
+    else { b = randInt(3, 12); a = randInt(3, 12); }
+    const prod = a * b;
+    return {
+      level, prompt: prod + ' ÷ ' + b, answer: a,
+      idea: 'Division asks: ' + b + ' × ? = ' + prod,
+      hint1: 'What times ' + b + ' equals ' + prod + '?',
+      hint2: 'Think of your × facts for ' + b + '.',
+      explain: b + ' × ' + a + ' = ' + prod + ', so ' + prod + ' ÷ ' + b + ' = ' + a + '.',
+      choices: shuffle(uniqueNearChoices(a, 4))
+    };
+  }
+
+  function buildFlipIt(puzzle) {
+    if (!puzzle || !puzzle.parts || puzzle.parts.length < 2) return null;
+    if (puzzle.isFraction) return null;
+    const p1 = Number(puzzle.parts[0]), p2 = Number(puzzle.parts[1]), ans = Number(puzzle.answer);
+    if (![p1, p2, ans].every(Number.isFinite)) return null;
+    if (puzzle.op === 'product') {
+      const divBy = Math.random() < 0.5 ? p1 : p2;
+      const expect = ans / divBy;
+      if (!Number.isInteger(expect)) return null;
+      return {
+        kind: 'div', prompt: ans + ' ÷ ' + divBy + ' = ?', answer: expect,
+        explain: ans + ' ÷ ' + divBy + ' = ' + expect + '  (because ' + divBy + ' × ' + expect + ' = ' + ans + ')',
+        choices: shuffle(uniqueNearChoices(expect, 4))
+      };
+    }
+    const sub = Math.random() < 0.5 ? p1 : p2;
+    const expect = ans - sub;
+    return {
+      kind: 'sub', prompt: ans + ' − ' + sub + ' = ?', answer: expect,
+      explain: ans + ' − ' + sub + ' = ' + expect + '  (because ' + sub + ' + ' + expect + ' = ' + ans + ')',
+      choices: shuffle(uniqueNearChoices(expect, 4))
+    };
+  }
+
+  return {
+    PATH_SKILLS,
+    generateSeeIt,
+    generateBonds,
+    generateThinkAdd,
+    generateChunks,
+    generateMultStrat,
+    generateDivThink,
+    buildFlipIt,
+    generateKakooma,
+    generateMetaPuzzle,
+    validatePuzzle,
+    findSumAnswers,
+    findProductAnswers,
+    findFracSumAnswers,
+    generatePattern,
+    generateMakeTen,
+    generateBreakApart,
+    MAKE_TEN_LEVELS,
+    BREAK_LEVELS,
+    shuffle,
+    randInt,
+    fracToString,
+    simplifyFrac
+  };
+});
+
+</script>
+<script>
+/* Number Sense Lab — app logic. Offline, no network, localStorage only. */
+(function () {
+'use strict';
+const APP_NAME = 'Number Sense Lab';           // <- rename the app here (also <title> + manifest)
+const SESSION_GOAL_SEC = 10 * 60;
+const STORE_KEY = 'nsl.v1';
+const P = window.NSLPuzzles;
+const $app = document.getElementById('app');
+
+/* ---------------- skills / levels config ---------------- */
+const SKILLS = [
+  { id: 'see', title: 'See It', emoji: '👀', levels: 4, targetMs: 4000, input: 'choices',
+    idea: 'Your eyes can see groups without counting one by one. A full row on a ten-frame is <b>5</b>, a full frame is <b>10</b>. Picture the pattern, and you’ll know the number in a flash.',
+    example: '🟡🟡🟡🟡🟡 / 🟡🟡🟡 → 5 and 3 → 8',
+    levelNames: ['Five-frames & dice', 'Ten-frames', 'Teens: 10 and some more', 'Rows & bigger frames'],
+    help: 'Practice “flash” cards with ten-frames or egg cartons: show for 2 seconds, ask how many and how she saw it.' },
+  { id: 'bonds', title: 'Bonds to 10', emoji: '🔗', levels: 3, targetMs: 4500, input: 'keypad',
+    idea: 'Some numbers are best friends: they make <b>10</b> together. 7 and 3. 6 and 4. Knowing these partners by heart is a super-power for adding and subtracting.',
+    example: '7 + ? = 10 → 3',
+    levelNames: ['Partners of 10 (with a ten-frame)', 'Partners of 5–10', 'Partners of 10, quick'],
+    help: 'Play “I say 6, you say 4” in the car until partners of 10 are instant.' },
+  { id: 'make10', title: 'Make a Ten', emoji: '🔟', levels: 4, targetMs: 6000, input: 'keypad',
+    idea: 'To add 8 + 5, don’t count up. Move <b>2</b> from the 5 to fill the 8 up to <b>10</b>. Now it’s just 10 + 3 = 13!',
+    example: '8 + 5 = 8 + 2 + 3 = 10 + 3 = 13',
+    levelNames: ['9 + something', '8 or 7 + something', 'Any make-a-ten', 'Make-a-ten in your head'],
+    help: 'Use two egg cartons (ten-frames): fill the first one, then see what spills over.' },
+  { id: 'thinkAdd', title: 'Think Addition', emoji: '🔄', levels: 3, targetMs: 6000, input: 'keypad',
+    idea: 'Subtraction is a missing-part puzzle. For 13 − 8, think <b>8 + ? = 13</b>. 8 + 2 is 10, and 3 more is 13 — so the answer is 5.',
+    example: '13 − 8 → 8 + 2 = 10, + 3 = 13 → 5',
+    levelNames: ['Within 10', 'Teens (hop through 10)', 'Bigger numbers'],
+    help: 'Ask “what do I add to 8 to get 13?” instead of “take 8 away.”' },
+  { id: 'chunks', title: 'Chunks to 100', emoji: '🧱', levels: 3, targetMs: 10000, input: 'keypad',
+    idea: 'Big numbers are easy in chunks. Slide a little from one number to make a round ten: <b>47 + 38 = 50 + 35</b>. Same total, friendlier numbers.',
+    example: '47 + 38 → 50 + 35 = 85',
+    levelNames: ['Friendly tens (adding)', 'Hop to 100', 'Subtract to a round ten'],
+    help: 'Talk through money: 47¢ + 38¢ — “give 3¢ to make 50¢.”' },
+  { id: 'mult', title: '× Strategies', emoji: '✖️', levels: 5, targetMs: 6000, input: 'keypad',
+    idea: 'You don’t have to memorize every fact. Build hard facts from easy ones: ×2 is double, ×10 adds a zero, ×5 is half of ×10, ×9 is ×10 take away one group, and <b>6×7 = 5×7 + 7</b>.',
+    example: '9 × 6 = 60 − 6 = 54',
+    levelNames: ['×2 (doubles)', '×5 (half of ×10)', '×10', '×9 = ×10 − one group', '×6, ×7, ×8 = 5 groups + more'],
+    help: 'Have her say the strategy out loud: “7 eights is 5 eights plus 2 eights.”' },
+  { id: 'div', title: '÷ Think ×', emoji: '➗', levels: 3, targetMs: 7000, input: 'keypad',
+    idea: 'Division is a multiplication you already know, backwards. For 42 ÷ 7, ask <b>7 × ? = 42</b>. You know 7 × 6 = 42, so it’s 6!',
+    example: '42 ÷ 7 → 7 × 6 = 42 → 6',
+    levelNames: ['÷2, ÷5, ÷10', '÷ up to 9', 'All tables'],
+    help: 'Pair each division with its multiplication fact (fact families).' }
+];
+const KMODES = [
+  { id: 'add12', label: 'Addition (small, to 12)', short: '+ to 12', maxG: 6, perNum: 2500 },
+  { id: 'add25', label: 'Addition (to 25)', short: '+ to 25', maxG: 9, perNum: 2500 },
+  { id: 'add99', label: 'Addition Pro (to 99)', short: '+ to 99', maxG: 9, perNum: 4000 },
+  { id: 'neg', label: 'Negatives (−15 to 15)', short: 'Negatives', maxG: 9, perNum: 3500 },
+  { id: 'times9', label: 'Times (tables to 9)', short: '× to 9', maxG: 9, perNum: 3000 },
+  { id: 'times12', label: 'Times (tables to 12)', short: '× to 12', maxG: 9, perNum: 3500 },
+  { id: 'times20', label: 'Times Pro (to 20)', short: '× to 20', maxG: 9, perNum: 4000 },
+  { id: 'frac', label: 'Fractions', short: 'Fractions', maxG: 7, perNum: 6000 }
+];
+const CHEERS = ['Nice thinking!', 'You saw it!', 'Brain power! 🧠', 'Smart move!', 'Yes! 🌟', 'That’s the way!', 'Great seeing!'];
+const QUICK = ['⚡ Quick recall — your brain is getting faster!', '⚡ Speedy! That’s a picture in your head now.', '⚡ Zoom! No counting needed.'];
+
+/* ---------------- storage ---------------- */
+function mkPlayer(id, name, color) {
+  const skills = {};
+  SKILLS.forEach(s => skills[s.id] = { level: 0, mastered: false, hist: [], levelAttempts: 0, total: 0, ok: 0 });
+  return { id, name, color, days: {}, best: {}, skills, seenIntro: {},
+    kak: { mode: 'add12', group: { add12: 4 }, unlocked: ['add12'], hist: [], streakUp: 0, missRow: 0 },
+    unlockAllPath: false, unlockAllKak: false, flipIt: true };
+}
+function load() {
+  try { const s = JSON.parse(localStorage.getItem(STORE_KEY)); if (s && s.players) return s; } catch (e) {}
+  return { players: [mkPlayer('p1', 'Kate', '#f4c95d'), mkPlayer('p2', 'Player 2', '#7ec8e3')], current: null };
+}
+let S = load();
+function save() { try { localStorage.setItem(STORE_KEY, JSON.stringify(S)); } catch (e) {} }
+const me = () => S.players.find(p => p.id === S.current);
+function todayKey(d) { d = d || new Date(); return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); }
+function day(p, k) { k = k || todayKey(); return p.days[k] || (p.days[k] = { sec: 0, items: 0, ok: 0, msSum: 0, goalMet: false, by: {} }); }
+function streak(p) {
+  let n = 0; const d = new Date();
+  if (!(p.days[todayKey(d)] || {}).goalMet) d.setDate(d.getDate() - 1);
+  while ((p.days[todayKey(d)] || {}).goalMet) { n++; d.setDate(d.getDate() - 1); }
+  return n;
+}
+function median(a) { if (!a.length) return 0; const b = a.slice().sort((x, y) => x - y); return b[Math.floor(b.length / 2)]; }
+function esc(s) { return String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c])); }
+function pick(a) { return a[Math.floor(Math.random() * a.length)]; }
+
+/* record one finished item */
+function record(gameKey, ok, ms, bestKey) {
+  const p = me(), d = day(p);
+  d.items++; if (ok) d.ok++; d.msSum += ms;
+  const b = d.by[gameKey] || (d.by[gameKey] = { items: 0, ok: 0 }); b.items++; if (ok) b.ok++;
+  if (bestKey && ok) { if (!p.best[bestKey] || ms < p.best[bestKey]) p.best[bestKey] = ms; }
+  save();
+}
+
+/* ---------------- session timer ---------------- */
+let ticking = false, goalShownToday = null;
+setInterval(() => {
+  if (!ticking || document.hidden || !S.current) return;
+  const p = me(), d = day(p); d.sec++;
+  if (d.sec >= SESSION_GOAL_SEC && !d.goalMet) { d.goalMet = true; save(); showGoalModal(); }
+  if (d.sec % 5 === 0) save();
+  updateTimer();
+}, 1000);
+function timerHTML() {
+  const d = day(me()); const left = SESSION_GOAL_SEC - d.sec;
+  const txt = left > 0 ? '⏱ ' + Math.floor(left / 60) + ':' + String(left % 60).padStart(2, '0') + ' left' : '🌟 Bonus +' + Math.floor(-left / 60) + ':' + String(-left % 60).padStart(2, '0');
+  return '<span class="chip" id="timer">' + txt + '</span>';
+}
+function updateTimer() {
+  const el = document.getElementById('timer'); if (!el) return;
+  el.outerHTML = timerHTML();
+  const bar = document.getElementById('sessbar'); if (bar) bar.style.width = Math.min(100, day(me()).sec / SESSION_GOAL_SEC * 100) + '%';
+}
+function showGoalModal() {
+  if (goalShownToday === todayKey()) return; goalShownToday = todayKey();
+  modal('<div style="font-size:64px">🌟</div><h2>10 minutes done!</h2><p>Your brain worked hard today. Streak: <b>' + streak(me()) + ' day' + (streak(me()) === 1 ? '' : 's') + '</b> 🔥</p>' +
+    '<button class="btn" data-act="goalDone">Finish for today</button><button class="btn ghost" data-act="closeModal">Keep going a little</button>');
+}
+
+/* ---------------- tiny UI helpers ---------------- */
+const ACT = {};
+document.addEventListener('click', e => {
+  const el = e.target.closest('[data-act]'); if (!el) return;
+  const fn = ACT[el.dataset.act]; if (fn) { e.preventDefault(); fn(el.dataset.arg, el); }
+});
+function modal(html) { closeModal(); const d = document.createElement('div'); d.className = 'modal-bg'; d.id = 'modal'; d.innerHTML = '<div class="modal">' + html + '</div>'; document.body.appendChild(d); }
+function closeModal() { const m = document.getElementById('modal'); if (m) m.remove(); }
+ACT.closeModal = closeModal;
+ACT.goalDone = () => { closeModal(); goHub(); };
+function toast(msg) { const t = document.createElement('div'); t.className = 'toast'; t.textContent = msg; document.body.appendChild(t); setTimeout(() => t.remove(), 1700); }
+function topbar(title, back, withTimer) {
+  const p = me();
+  return '<div class="topbar">' + (back ? '<button class="btn secondary small" data-act="' + back + '">◀</button>' : '') +
+    '<div class="title">' + esc(title) + '</div>' + (withTimer && p ? timerHTML() : '') +
+    (p ? '<span class="chip">🔥 ' + streak(p) + '</span>' : '') + '</div>' +
+    (withTimer && p ? '<div class="progress" style="margin:0 22px"><div id="sessbar" style="width:' + Math.min(100, day(p).sec / SESSION_GOAL_SEC * 100) + '%"></div></div>' : '');
+}
+function render(html, playing) { closeModal(); ticking = !!playing; $app.innerHTML = html; window.scrollTo(0, 0); }
+
+/* ---------------- HOME ---------------- */
+function goHome() {
+  S.current = null; save();
+  render(topbar(APP_NAME) + '<div class="screen"><h1>Who’s playing?</h1><div class="grid2">' +
+    S.players.map(p => { const d = p.days[todayKey()] || { sec: 0 };
+      return '<div class="card player-card" data-act="pickPlayer" data-arg="' + p.id + '" style="border-color:' + p.color + '">' +
+        '<div class="avatar" style="background:' + p.color + '">' + esc(p.name.charAt(0).toUpperCase()) + '</div>' +
+        '<div class="name">' + esc(p.name) + '</div><div class="muted">🔥 ' + streak(p) + '-day streak · today ' + Math.floor(d.sec / 60) + ' min</div>' +
+        '<button class="edit" data-act="rename" data-arg="' + p.id + '">✏️ Change name</button></div>'; }).join('') +
+    '</div><div class="row"><button class="btn secondary" data-act="parent">👪 Grown-ups</button><span class="spacer"></span><button class="btn secondary" data-act="about">ℹ️ About</button></div></div>');
+}
+ACT.home = goHome;
+ACT.pickPlayer = id => { S.current = id; save(); goHub(); };
+ACT.rename = (id) => {
+  const p = S.players.find(x => x.id === id);
+  modal('<h2>Change name</h2><input id="nameIn" maxlength="16" value="' + esc(p.name) + '"><button class="btn" data-act="saveName" data-arg="' + id + '">Save</button><button class="btn ghost" data-act="closeModal">Cancel</button>');
+  setTimeout(() => { const i = document.getElementById('nameIn'); i && i.focus(); }, 50);
+};
+ACT.saveName = id => { const v = (document.getElementById('nameIn').value || '').trim(); if (v) { S.players.find(x => x.id === id).name = v; save(); } closeModal(); S.current ? goParent() : goHome(); };
+
+/* ---------------- HUB (path map + games) ---------------- */
+function skillUnlocked(p, i) { return p.unlockAllPath || i === 0 || p.skills[SKILLS[i - 1].id].mastered; }
+function currentSkillIndex(p) { for (let i = 0; i < SKILLS.length; i++) if (!p.skills[SKILLS[i].id].mastered && skillUnlocked(p, i)) return i; return SKILLS.length - 1; }
+function goHub() {
+  const p = me(); if (!p) return goHome();
+  const d = day(p), ci = currentSkillIndex(p), cs = SKILLS[ci];
+  const path = SKILLS.map((s, i) => {
+    const st = p.skills[s.id], un = skillUnlocked(p, i);
+    const status = st.mastered ? '⭐ Mastered' : un ? 'Level ' + (st.level + 1) + ' of ' + s.levels : '🔒 Unlocks next';
+    const pct = st.mastered ? 100 : Math.round(st.level / s.levels * 100);
+    return '<div class="card" ' + (un ? 'data-act="openSkill" data-arg="' + i + '"' : '') + ' style="min-height:0;opacity:' + (un ? 1 : .5) + ';' + (i === ci ? 'outline:4px solid var(--accent)' : '') + '">' +
+      '<div class="row"><span class="emoji">' + s.emoji + '</span><div style="flex:1"><div class="big" style="font-size:24px">' + (i + 1) + '. ' + s.title + '</div><div class="muted">' + status + '</div></div></div>' +
+      '<div class="progress"><div style="width:' + pct + '%"></div></div></div>';
+  }).join('');
+  render(topbar('Hi, ' + p.name + '!', 'home', true) +
+    '<div class="screen"><div class="card" style="min-height:0"><div class="row"><div style="flex:1"><div class="big">Today: ' + Math.floor(d.sec / 60) + ' of 10 minutes</div>' +
+    '<div class="muted">Mix any games. A little every day makes your brain faster.</div></div>' +
+    '<button class="btn" data-act="openSkill" data-arg="' + ci + '">▶ Keep going: ' + cs.title + '</button></div></div>' +
+    '<h2>My path</h2><div class="grid2">' + path + '</div>' +
+    '<h2>Games</h2><div class="grid2">' +
+    '<div class="card" data-act="kakHome"><span class="emoji">🎯</span><div class="big">Kakooma</div><div class="muted">Find the number that’s the sum of two others. Now: ' + KMODES.find(m => m.id === p.kak.mode).label + '</div></div>' +
+    '<div class="card" data-act="openPattern"><span class="emoji">🍇</span><div class="big">Smart Counting</div><div class="muted">Big pictures — find the clever groups instead of counting.</div></div>' +
+    '</div></div>', true);
+}
+ACT.hub = goHub;
+
+/* ---------------- SKILL PLAY ---------------- */
+let G = null; // current game state
+ACT.openSkill = i => {
+  const s = SKILLS[+i], p = me();
+  if (!p.seenIntro[s.id]) return showIntro(s.id, () => { p.seenIntro[s.id] = true; save(); startSkill(+i); });
+  startSkill(+i);
+};
+function showIntro(id, onGo) {
+  const s = SKILLS.find(x => x.id === id) || PATTERN_INFO;
+  ACT._introGo = onGo;
+  render(topbar(s.title, 'hub', true) + '<div class="screen"><h1>' + s.emoji + ' The idea</h1><div class="idea">' + s.idea +
+    '<div class="example">' + s.example + '</div></div><div class="actions"><button class="btn" data-act="_introGo">Let’s go!</button></div></div>', true);
+}
+function startSkill(i) {
+  const s = SKILLS[i];
+  G = { type: 'skill', si: i, skill: s, recycle: [], item: null };
+  nextSkillItem();
+}
+function makeSkillItem(s, level) {
+  let it;
+  if (s.id === 'see') { it = P.generateSeeIt(level); it.answer = it.total; it.prompt = 'How many?'; it.visual = 'dots'; it.peekMs = [4500, 3500, 3000, 2500][level]; }
+  else if (s.id === 'bonds') { it = P.generateBonds(level === 2 ? 2 : level); it.visual = level === 0 ? 'bondframe' : 'bond'; }
+  else if (s.id === 'make10') {
+    let g = 0; do { it = P.generateMakeTen(0); g++; } while (g < 50 && ((level === 0 && it.a !== 9) || (level === 1 && !(it.a === 8 || it.a === 7))));
+    it.visual = level < 3 ? 'frames2' : null;
+  } else if (s.id === 'thinkAdd') { it = P.generateThinkAdd(level); it.visual = level === 0 ? 'bondTA' : level === 1 ? 'framesTA' : null; }
+  else if (s.id === 'chunks') { it = P.generateChunks(level); it.visual = null; }
+  else if (s.id === 'mult') { it = P.generateMultStrat(level); it.visual = level >= 3 ? 'array' : null; }
+  else { it = P.generateDivThink(level); it.visual = null; }
+  // parse a,b for visuals where missing
+  if (it.a === undefined || it.b === undefined) { const m = String(it.prompt).match(/(\d+)\s*[+×−÷]\s*(\d+)/); if (m) { it.a = it.a !== undefined ? it.a : +m[1]; it.b = +m[2]; } }
+  it.level = level;
+  return it;
+}
+function nextSkillItem() {
+  const p = me(), st = p.skills[G.skill.id];
+  G.recycle.forEach(r => r.due--);
+  const ri = G.recycle.findIndex(r => r.due <= 0);
+  let it;
+  if (ri >= 0) { it = G.recycle.splice(ri, 1)[0].item; if (it.choices) it.choices = P.shuffle(it.choices); it.recycled = true; }
+  else it = makeSkillItem(G.skill, st.mastered ? Math.floor(Math.random() * G.skill.levels) : st.level);
+  G.item = it; G.tries = 0; G.hints = 0; G.step = 0; G.typed = ''; G.t0 = Date.now(); G.done = false; G.peeked = false;
+  drawSkill();
+  if (it.peekMs) { clearTimeout(G.peekT); G.peekT = setTimeout(veilDots, it.peekMs); }
+}
+function drawSkill(msgHTML) {
+  const s = G.skill, it = G.item, st = me().skills[s.id];
+  const lvlTxt = st.mastered ? '⭐ Mastered — practice mix' : 'Level ' + (it.level + 1) + ': ' + s.levelNames[it.level];
+  const input = s.input === 'choices' ? '<div class="choices">' + it.choices.map(c => '<button class="choice" data-act="ansChoice" data-arg="' + c + '">' + c + '</button>').join('') + '</div>' : keypadHTML();
+  render(topbar(s.emoji + ' ' + s.title, 'hub', true) +
+    '<div class="screen"><div class="row"><span class="muted" style="font-size:18px">' + lvlTxt + '</span><span class="spacer"></span>' + masteryDots(st) +
+    '<button class="btn ghost small" data-act="skillIdea">💭 Idea</button></div>' +
+    '<div class="play-split"><div>' + visualHTML(it) + (s.id === 'see' ? '' : '<div class="problem">' + esc(it.prompt.replace(' = ?', '')) + (it.prompt.indexOf('?') >= 0 ? '' : ' = ?') + '</div>') +
+    (s.id === 'see' ? '<div class="prompt">How many dots? Try to <b>see</b> it, not count it.</div>' : '') +
+    speedBarHTML() + '</div><div>' + (s.input === 'keypad' ? '<div class="answer" id="typed">' + (G.typed || '&nbsp;') + '</div>' : '') + input +
+    '<div class="hintbox" id="hint">' + (msgHTML || '<span class="muted">Stuck? Tap 💡 for a thinking question.</span>') + '</div>' +
+    '<div class="actions">' + (G.done ? '<button class="btn" data-act="nextItem">Next ▶</button>' : '<button class="btn secondary" data-act="skillHint">💡 Hint</button>') + '</div></div></div></div>', true);
+  startSpeedBar();
+}
+function masteryDots(st) {
+  const h = st.hist.slice(-10);
+  let s = '<span title="last 10" style="display:inline-flex;gap:4px;margin-right:8px">';
+  for (let i = 0; i < 10; i++) s += '<span style="width:14px;height:14px;border-radius:50%;background:' + (i < h.length ? (h[i].ok ? 'var(--good)' : '#8fa79c') : 'var(--panel2)') + '"></span>';
+  return s + '</span>';
+}
+function keypadHTML() {
+  const keys = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '⌫', '0', '✓'];
+  return '<div class="keypad">' + keys.map(k => '<button class="key' + (k === '✓' ? ' ok' : '') + '" data-act="key" data-arg="' + k + '">' + k + '</button>').join('') + '</div>';
+}
+ACT.key = k => {
+  if (G.done) return;
+  if (k === '⌫') G.typed = G.typed.slice(0, -1);
+  else if (k === '✓') { if (G.typed !== '') submitSkill(+G.typed); return; }
+  else if (G.typed.length < 4) G.typed += k;
+  const el = document.getElementById('typed'); if (el) el.innerHTML = G.typed || '&nbsp;';
+};
+ACT.ansChoice = (v, el) => { if (G.done) return; submitSkill(+v, el); };
+ACT.skillIdea = () => { const s = G.skill; modal('<h2>' + s.emoji + ' The idea</h2><div class="idea" style="text-align:left">' + s.idea + '<div class="example">' + s.example + '</div></div><button class="btn" data-act="closeModal">Got it</button>'); };
+ACT.skillHint = () => { if (G.done) return; G.hints++; G.step++; showLadder(G.step); };
+function showLadder(n) {
+  const it = G.item;
+  if (it.peekMs) unveilDots();
+  if (n === 1) setHint('🤔 ' + esc(it.hint1));
+  else if (n === 2) setHint('🔎 ' + esc(it.hint2));
+  else revealSkill();
+}
+function setHint(html, cls) { const h = document.getElementById('hint'); if (h) { h.className = 'hintbox' + (cls ? ' ' + cls : ''); h.innerHTML = html; } }
+function submitSkill(v, el) {
+  const it = G.item;
+  if (v === it.answer) {
+    const ms = Date.now() - G.t0, ok = G.tries === 0 && G.hints === 0 && !G.peeked;
+    G.done = true; stopSpeedBar();
+    if (el) el.classList.add('good');
+    const quick = ok && ms <= G.skill.targetMs;
+    finishSkillItem(ok, ms);
+    const extra = levelMsg || '';
+    drawSkill('<div class="eq">' + esc(it.explain) + '</div>' + (quick ? pick(QUICK) : pick(CHEERS)) + (extra ? '<div style="margin-top:8px">' + extra + '</div>' : ''));
+    return;
+  }
+  G.tries++; G.typed = ''; const t = document.getElementById('typed'); if (t) t.innerHTML = '&nbsp;';
+  if (el) { el.classList.add('bad'); setTimeout(() => el.classList.remove('bad'), 600); }
+  G.step++;
+  if (it.peekMs) unveilDots();
+  if (G.step === 1) setHint('Hmm, not quite — let’s think it through.<br>🤔 ' + esc(it.hint1));
+  else if (G.step === 2) setHint('Good try! Let’s narrow it down.<br>🔎 ' + esc(it.hint2));
+  else revealSkill();
+}
+function revealSkill() {
+  const it = G.item; G.done = true; stopSpeedBar();
+  if (it.peekMs) unveilDots();
+  G.recycle.push({ item: it, due: 3 });   // see it again soon (like Tang's fact-pack recycling)
+  finishSkillItem(false, Date.now() - G.t0);
+  drawSkill('<b>Here’s how to see it:</b><div class="eq">' + esc(it.explain) + '</div><span class="muted">We’ll try one like this again in a bit — that’s how brains learn.</span>');
+  document.getElementById('hint').className = 'hintbox reveal';
+}
+let levelMsg = '';
+function finishSkillItem(ok, ms) {
+  const p = me(), s = G.skill, st = p.skills[s.id];
+  levelMsg = '';
+  st.total++; if (ok) st.ok++;
+  record('skill:' + s.id, ok, ms, ok ? 'skill:' + s.id + ':L' + G.item.level : null);
+  if (st.mastered || G.item.recycled) { save(); return; }
+  st.hist.push({ ok, ms: Math.min(ms, 60000) }); st.levelAttempts++;
+  if (st.hist.length > 10) st.hist.shift();
+  const h = st.hist, acc = h.filter(x => x.ok).length / h.length, med = median(h.filter(x => x.ok).map(x => x.ms));
+  if (h.length >= 10 && acc >= 0.9 && med <= s.targetMs) {
+    st.level++; st.hist = []; st.levelAttempts = 0;
+    if (st.level >= s.levels) { st.level = s.levels - 1; st.mastered = true; levelMsg = '🏆 <b>' + s.title + ' mastered!</b> The next step on your path is unlocked.'; setTimeout(() => celebrate(s.title + ' mastered!'), 300); }
+    else { levelMsg = '🎉 <b>Level up!</b> Next: ' + s.levelNames[st.level]; }
+  } else if (h.length >= 10 && acc >= 0.9) {
+    levelMsg = '✅ Super accurate! Now we’re helping your brain get a little faster — that comes with practice.';
+  } else if (h.length >= 10 && acc < 0.5 && st.level > 0) {
+    st.level--; st.hist = []; st.levelAttempts = 0;
+    levelMsg = '🌱 Let’s warm up with a slightly easier set to build speed.';
+  }
+  save();
+}
+function celebrate(t) { modal('<div style="font-size:72px">🏆</div><h2>' + esc(t) + '</h2><p>You did it with speed AND accuracy. That’s real mastery.</p><button class="btn" data-act="closeModal">Yay!</button>'); }
+ACT.nextItem = () => { if (G.type === 'skill') nextSkillItem(); else if (G.type === 'pattern') nextPattern(); };
+
+/* soft speed bar: fills calmly, never punishes */
+function speedBarHTML() { return '<div class="progress" style="max-width:420px;margin:6px auto;height:8px;background:var(--panel)"><div id="speed" style="width:0%;background:var(--blue);transition:none"></div></div>'; }
+function startSpeedBar() {
+  stopSpeedBar(); if (G.done) return;
+  const target = G.type === 'skill' ? G.skill.targetMs : 8000;
+  G.speedT = setInterval(() => { const el = document.getElementById('speed'); if (!el) return; el.style.width = Math.min(100, (Date.now() - G.t0) / target * 100) + '%'; }, 120);
+}
+function stopSpeedBar() { if (G && G.speedT) clearInterval(G.speedT); }
+
+/* ---------------- visuals ---------------- */
+function svgDots(dots, gaps, H, frame, colorBy) {
+  const pal = ['#f4c95d', '#7ec8e3', '#f4a261', '#b5e48c', '#e5989b', '#cdb4db', '#ffd6a5'];
+  let s = '<svg class="dots" viewBox="0 0 100 ' + H + '">';
+  if (frame) [...dots, ...gaps].forEach(pt => { s += '<rect x="' + (pt.x - frame / 2) + '" y="' + (pt.y - frame / 2) + '" width="' + frame + '" height="' + frame + '" fill="none" stroke="#5d8a7b" stroke-width=".6"/>'; });
+  gaps.forEach(pt => { s += '<circle cx="' + pt.x + '" cy="' + pt.y + '" r="2.2" fill="none" stroke="#5d8a7b" stroke-width=".5" stroke-dasharray="1 1"/>'; });
+  dots.forEach(pt => { s += '<circle cx="' + pt.x + '" cy="' + pt.y + '" r="' + (frame ? Math.min(3.6, frame * 0.36) : 2.2) + '" fill="' + (colorBy ? pal[pt.g % pal.length] : '#f4c95d') + '"/>'; });
+  return s + '</svg>';
+}
+function tenFrames(list) { // list of [{n, color}] segments per frame
+  const W = 100, fw = list.length === 1 ? 60 : 44, cell = fw / 5, H = cell * 2 + 10;
+  let s = '<svg class="dots" viewBox="0 0 ' + W + ' ' + H + '">';
+  list.forEach((segs, f) => {
+    const x0 = list.length === 1 ? 20 : (f === 0 ? 4 : 52);
+    let k = 0;
+    for (let i = 0; i < 10; i++) { const x = x0 + (i % 5) * cell, y = 5 + Math.floor(i / 5) * cell; s += '<rect x="' + x + '" y="' + y + '" width="' + cell + '" height="' + cell + '" fill="none" stroke="#5d8a7b" stroke-width=".6"/>'; }
+    segs.forEach(seg => { for (let j = 0; j < seg.n && k < 10; j++, k++) { const x = x0 + (k % 5) * cell + cell / 2, y = 5 + Math.floor(k / 5) * cell + cell / 2; s += '<circle cx="' + x + '" cy="' + y + '" r="' + cell * 0.36 + '" fill="' + seg.color + '"' + (seg.ghost ? ' fill-opacity=".25" stroke="' + seg.color + '" stroke-width=".6" stroke-dasharray="1 1"' : '') + '/>'; } });
+  });
+  return s + '</svg>';
+}
+function bondSVG(total, a, b) {
+  const c = (x, y, t, q) => '<circle cx="' + x + '" cy="' + y + '" r="11" fill="' + (q ? '#1c4a3d' : '#f8f4e6') + '" stroke="#f4c95d" stroke-width="1.2"/><text x="' + x + '" y="' + (y + 4.5) + '" text-anchor="middle" font-size="12" font-weight="900" fill="' + (q ? '#f4c95d' : '#1d2b27') + '">' + t + '</text>';
+  return '<svg class="dots" viewBox="0 0 100 52" style="max-width:300px"><line x1="50" y1="14" x2="28" y2="38" stroke="#a9c4b8" stroke-width="1"/><line x1="50" y1="14" x2="72" y2="38" stroke="#a9c4b8" stroke-width="1"/>' +
+    c(50, 13, total, total === '?') + c(28, 38, a, a === '?') + c(72, 38, b, b === '?') + '</svg>';
+}
+function visualHTML(it) {
+  const Y = '#f4c95d', B = '#7ec8e3';
+  switch (it.visual) {
+    case 'dots': return '<div class="cover" id="dotwrap">' + svgDots(it.dots, it.gaps, it.H, (it.frameNote === 'five' || it.frameNote === 'ten') ? 13 : it.frameNote === 'double' ? 8.5 : 0, false) + '</div>';
+    case 'bondframe': return tenFrames([[{ n: it.a, color: Y }]]) + bondSVG(it.total, it.a, '?');
+    case 'bond': return bondSVG(it.total, it.a, '?');
+    case 'frames2': return tenFrames([[{ n: it.a, color: Y }], [{ n: it.b, color: B }]]) + '<div class="prompt muted" style="font-size:18px">Yellow + blue. Can some blue move over to fill the first frame?</div>';
+    case 'bondTA': return bondSVG(it.total, it.sub, '?');
+    case 'framesTA': { const first = Math.min(10, it.total), second = Math.max(0, it.total - 10);
+      return tenFrames([[{ n: first, color: Y }], [{ n: second, color: Y }]]) + '<div class="prompt muted" style="font-size:18px">' + it.total + ' is ' + (second ? '10 and ' + second : it.total) + '. Think: ' + it.sub + ' + ? = ' + it.total + '</div>'; }
+    case 'array': { const r = Math.min(it.a, 9), c = Math.min(it.b, 12), dots = [];
+      for (let i = 0; i < r; i++) for (let j = 0; j < c; j++) dots.push({ x: 6 + j * (88 / c) + 44 / c, y: 4 + i * 6 + 3, g: i < 5 ? 0 : 1 });
+      return svgDots(dots, [], 8 + r * 6, 0, true) + '<div class="prompt muted" style="font-size:18px">' + it.a + ' rows of ' + it.b + ' — the first 5 rows are one color.</div>'; }
+    default: return '';
+  }
+}
+function veilDots() { const w = document.getElementById('dotwrap'); if (!w || G.done) return; if (w.querySelector('.veil')) return; const v = document.createElement('div'); v.className = 'veil'; v.innerHTML = '<button class="btn secondary small" data-act="peek">👀 Peek again</button>'; w.appendChild(v); }
+function unveilDots() { const w = document.getElementById('dotwrap'); const v = w && w.querySelector('.veil'); if (v) v.remove(); }
+ACT.peek = () => { G.peeked = true; unveilDots(); clearTimeout(G.peekT); G.peekT = setTimeout(veilDots, 2500); };
+
+/* ---------------- SMART COUNTING (Grapes-style pattern game) ---------------- */
+const PATTERN_INFO = { id: 'pattern', title: 'Smart Counting', emoji: '🍇',
+  idea: 'Counting one by one is slow and easy to mess up. Look for <b>clever groups</b>: equal rows, pairs that make 10, a full block with a few missing. Then add or multiply the groups.',
+  example: '4 rows of 5 → 4 × 5 = 20' };
+ACT.openPattern = () => { const p = me(); if (!p.seenIntro.pattern) return showIntro('pattern', () => { p.seenIntro.pattern = true; save(); startPattern(); }); startPattern(); };
+function startPattern() { G = { type: 'pattern', level: me().patternLevel || 0, streak: 0 }; nextPattern(); }
+function nextPattern() {
+  G.item = P.generatePattern(G.level); G.stage = 'count'; G.tries = 0; G.hints = 0; G.step = 0; G.t0 = Date.now(); G.done = false; drawPattern();
+}
+function drawPattern(msg, colorBy) {
+  const it = G.item;
+  const body = G.stage === 'count'
+    ? '<div class="prompt">How many? Find smart groups — don’t count one by one.</div><div class="choices">' + it.choices.map(c => '<button class="choice" data-act="patAns" data-arg="' + c + '">' + c + '</button>').join('') + '</div>'
+    : G.stage === 'how' ? '<div class="prompt">Yes, ' + it.total + '! How did you see it?</div><div class="choices" style="grid-template-columns:1fr">' + it.strategyChoices.map(c => '<button class="choice text" data-act="patHow" data-arg="' + c.id + '">' + esc(c.label) + '</button>').join('') + '</div>' : '';
+  render(topbar('🍇 Smart Counting', 'hub', true) + '<div class="screen"><div class="play-split"><div>' + svgDots(it.dots, it.gaps, it.H, 0, !!colorBy) + speedBarHTML() + '</div><div>' + body +
+    '<div class="hintbox" id="hint">' + (msg || (G.stage === 'count' ? '<span class="muted">Stuck? Tap 💡 for a thinking question.</span>' : '<span class="muted">Pick the one closest to what your brain did.</span>')) + '</div><div class="actions">' +
+    (G.done ? '<button class="btn" data-act="nextItem">Next ▶</button>' : G.stage === 'count' ? '<button class="btn secondary" data-act="patHint">💡 Hint</button>' : '') + '</div></div></div></div>', true);
+  if (G.stage === 'count') startSpeedBar();
+}
+ACT.patHint = () => { G.hints++; G.step++; if (G.step === 1) setHint('🤔 ' + esc(G.item.hint1)); else if (G.step === 2) { drawPattern('🔎 ' + esc(G.item.hint2), true); } else patReveal(); };
+ACT.patAns = (v, el) => {
+  const it = G.item;
+  if (+v === it.total) { G.ms = Date.now() - G.t0; G.firstOk = G.tries === 0 && G.hints === 0; G.stage = 'how'; stopSpeedBar(); drawPattern('', false); return; }
+  G.tries++; G.step++; el.classList.add('bad'); setTimeout(() => el.classList.remove('bad'), 600);
+  if (G.step === 1) setHint('Close! Let’s look for groups.<br>🤔 ' + esc(it.hint1));
+  else if (G.step === 2) drawPattern('Good try! 🔎 ' + esc(it.hint2), true);
+  else patReveal();
+};
+function patReveal() { const it = G.item; G.done = true; G.stage = 'done'; record('pattern', false, Date.now() - G.t0); drawPattern('<b>Here’s a fast way to see it:</b><div class="eq">' + esc(it.explain) + '</div>', true); document.getElementById('hint').className = 'hintbox reveal'; }
+ACT.patHow = id => {
+  const it = G.item; G.done = true; G.stage = 'done';
+  record('pattern', G.firstOk, G.ms, G.firstOk ? 'pattern:' + it.kind : null);
+  if (G.firstOk && G.ms < 15000) { G.streak++; if (G.streak >= 4 && G.level < 3) { G.level++; G.streak = 0; me().patternLevel = G.level; save(); toast('Bigger pictures unlocked!'); } } else G.streak = 0;
+  const msg = id === it.kind ? '🌟 Exactly — that’s the smart way!' : id === 'count' ? 'Counting works, but here’s a faster way:' : 'That can work too! Here’s another smart way:';
+  drawPattern(msg + '<div class="eq">' + esc(it.explain) + '</div>', true);
+  document.getElementById('hint').className = 'hintbox reveal';
+};
+
+/* ---------------- KAKOOMA ---------------- */
+function kakUnlocked(p, id) { return p.unlockAllKak || p.kak.unlocked.indexOf(id) >= 0; }
+ACT.kakHome = () => {
+  const p = me();
+  if (!p.seenIntro.kak) { ACT._introGo = () => { p.seenIntro.kak = true; save(); ACT.kakHome(); };
+    return render(topbar('🎯 Kakooma', 'hub', true) + '<div class="screen"><h1>🎯 The idea</h1><div class="idea">In a group of numbers, one number is the <b>sum of two others</b>. Find it and tap it! Tip: start with the biggest number — can two others build it?<div class="example">5 · 3 · 9 · 4 → 5 + 4 = 9 → tap 9</div><p class="muted" style="margin-top:12px;font-size:18px">Kakooma was invented by math teacher Greg Tang.</p></div><div class="actions"><button class="btn" data-act="_introGo">Let’s go!</button></div></div>', true); }
+  render(topbar('🎯 Kakooma', 'hub', true) + '<div class="screen"><h2>Pick a level</h2><div class="grid2">' +
+    KMODES.map((m, i) => { const un = kakUnlocked(p, m.id);
+      return '<div class="card" style="min-height:0;opacity:' + (un ? 1 : .5) + ';' + (p.kak.mode === m.id ? 'outline:4px solid var(--accent)' : '') + '" ' + (un ? 'data-act="kakPlay" data-arg="' + m.id + '"' : '') + '>' +
+        '<div class="big" style="font-size:24px">' + (un ? '' : '🔒 ') + m.label + '</div><div class="muted">' + (un ? 'Group size now: ' + (p.kak.group[m.id] || 4) + (p.best['kak:' + m.id] ? ' · best ' + (p.best['kak:' + m.id] / 1000).toFixed(1) + 's' : '') : 'Unlocks when you’re quick and accurate on the level before') + '</div></div>'; }).join('') +
+    '</div><div class="card" data-act="kakMeta" style="min-height:0"><div class="big" style="font-size:24px">🧩 Puzzle-in-a-Puzzle</div><div class="muted">Solve small puzzles; their answers make one final puzzle. (' + KMODES.find(m => m.id === p.kak.mode).short + ')</div></div></div>', true);
+};
+ACT.kakPlay = id => { const p = me(); p.kak.mode = id; if (!p.kak.group[id]) p.kak.group[id] = id === 'add12' ? 4 : 5; save(); G = { type: 'kak', mode: id }; nextKak(); };
+ACT.kakMeta = () => {
+  const p = me(), mode = p.kak.mode, n = mode === 'add12' ? 4 : 5, g = mode === 'add12' ? 4 : 5;
+  const mp = P.generateMetaPuzzle(mode, n, g);
+  if (!mp) return toast('Try again!');
+  G = { type: 'kak', mode, meta: mp, mi: 0, collected: [], t0meta: Date.now() };
+  nextKak();
+};
+function nextKak() {
+  const p = me();
+  if (G.meta) { G.puz = G.mi < G.meta.minis.length ? G.meta.minis[G.mi] : G.meta.final; }
+  else { let pz = null, g = p.kak.group[G.mode] || 4; for (let i = 0; i < 20 && !pz; i++) pz = P.generateKakooma(G.mode, g); G.puz = pz; }
+  if (!P.validatePuzzle(G.puz)) return toast('Oops, try again');
+  G.tries = 0; G.hints = 0; G.step = 0; G.t0 = Date.now(); G.done = false; G.flip = null;
+  drawKak();
+}
+function tilePositions(n) {
+  if (n >= 7) return null;
+  const pts = []; for (let i = 0; i < n; i++) { const a = -Math.PI / 2 + i * 2 * Math.PI / n; pts.push({ x: 50 + 34 * Math.cos(a), y: 50 + 34 * Math.sin(a) }); } return pts;
+}
+function drawKak(msg) {
+  const pz = G.puz, n = pz.numbers.length, pos = tilePositions(n);
+  const opWord = pz.op === 'product' ? 'product (×)' : 'sum (+)';
+  const tiles = pz.numbers.map((v, i) => '<button class="tile' + (pz.isFraction ? ' frac' : '') + '" id="t' + i + '" data-act="kakTap" data-arg="' + i + '" ' + (pos ? 'style="left:' + pos[i].x + '%;top:' + pos[i].y + '%"' : '') + '>' + esc(v) + '</button>').join('');
+  let metaBar = '';
+  if (G.meta) { const tot = G.meta.minis.length; metaBar = '<div class="collected">' + G.meta.minis.map((m, i) => '<span class="' + (i < G.mi ? 'done' : '') + '">' + (i < G.mi ? esc(G.collected[i]) : '?') + '</span>').join('') + '</div><div class="prompt" style="font-size:20px">' + (G.mi < tot ? 'Mini-puzzle ' + (G.mi + 1) + ' of ' + tot : '🧩 Final puzzle — made from your answers!') + '</div>'; }
+  render(topbar('🎯 Kakooma · ' + KMODES.find(m => m.id === G.mode).short, 'kakHome', true) +
+    '<div class="screen">' + metaBar + '<div class="play-split"><div><div class="prompt">Tap the number that’s the <b>' + opWord + '</b> of two others</div>' +
+    '<div class="board' + (pos ? '' : ' grid') + '">' + tiles + '</div>' + speedBarHTML() + '</div><div>' +
+    '<div class="hintbox" id="hint">' + (msg || '<span class="muted">Stuck? Tap 💡 for a thinking question.</span>') + '</div>' +
+    '<div id="flip"></div><div class="actions" id="kakActions">' + (G.done ? '' : '<button class="btn secondary" data-act="kakHint">💡 Hint</button>') + '</div></div></div></div>', true);
+  startSpeedBar();
+}
+function kakHintText(level) {
+  const pz = G.puz, [a, b] = pz.parts;
+  if (level === 1) {
+    if (pz.op === 'product') return '🤔 Start with the biggest numbers. Which one is in a times table of two smaller numbers here?';
+    if (pz.isFraction) return '🤔 Rename them with the same bottom number (try ' + (pz.commonDen || 12) + 'ths). Then which one is the sum of two others?';
+    if (G.mode === 'neg') return '🤔 Adding a negative is like subtracting. Try a positive with a negative — what do you get?';
+    return '🤔 Start with the biggest number: can two others build it? Or look for two numbers that make a ten.';
+  }
+  // level 2: narrow — highlight one part
+  const idx = pz.numbers.findIndex(v => String(v) === String(a));
+  const el = document.getElementById('t' + idx); if (el) el.classList.add('part');
+  if (pz.op === 'product') return '🔎 One of the factors is <b>' + esc(a) + '</b> (outlined). Which other number times ' + esc(a) + ' is on the board?';
+  return '🔎 One of the two parts is <b>' + esc(a) + '</b> (outlined). What could you add to ' + esc(a) + ' to land on another number here?';
+}
+function fastWay(pz) {
+  const [a, b] = pz.parts.map(Number), ans = Number(pz.answer);
+  if (pz.isFraction) return 'Fast way: rename to the same denominator, then add the tops.';
+  if (pz.op === 'product') { const big = Math.max(a, b), sm = Math.min(a, b); if (big > 5 && big <= 9) return 'Fast way: ' + big + ' = 5 + ' + (big - 5) + ', so ' + sm + '×5 + ' + sm + '×' + (big - 5) + ' = ' + (sm * 5) + ' + ' + (sm * (big - 5)) + '.'; if (big === 9) return 'Fast way: ×9 is ×10 minus one group.'; return 'Fast way: break a factor into friendly parts (like 10 + something).'; }
+  if (a < 0 || b < 0) return 'Fast way: a positive plus a negative — subtract and keep the sign of the bigger one.';
+  if ((Math.abs(a) % 10) + (Math.abs(b) % 10) === 10) return 'Fast way: the ones digits ' + (a % 10) + ' and ' + (b % 10) + ' make a ten!';
+  return 'Fast way: start from the biggest. ' + ans + ' − ' + Math.max(a, b) + ' = ' + Math.min(a, b) + ', and ' + Math.min(a, b) + ' is on the board.';
+}
+ACT.kakHint = () => { if (G.done) return; G.hints++; G.step++; if (G.step <= 2) setHint(kakHintText(G.step)); else kakReveal(); };
+ACT.kakTap = (i, el) => {
+  if (G.done) return;
+  const pz = G.puz, v = pz.numbers[+i];
+  if (String(v) === String(pz.answer)) { el.classList.add('good'); return kakSolved(true); }
+  G.tries++; G.step++; el.classList.add('bad'); setTimeout(() => el.classList.remove('bad'), 600);
+  if (G.step === 1) setHint('Hmm, can two others make ' + esc(v) + '? Let’s think.<br>' + kakHintText(1));
+  else if (G.step === 2) setHint('Good try! Let’s narrow it down.<br>' + kakHintText(2));
+  else kakReveal();
+};
+function markParts() {
+  const pz = G.puz; const used = new Set();
+  pz.numbers.forEach((v, i) => { const el = document.getElementById('t' + i); if (!el) return;
+    if (String(v) === String(pz.answer)) el.classList.add('good');
+    else if (pz.parts.map(String).indexOf(String(v)) >= 0 && !used.has(String(v))) { used.add(String(v)); el.classList.add('part'); }
+    else el.classList.add('dim'); });
+}
+function kakReveal() { G.done = true; stopSpeedBar(); markParts(); kakRecord(false); setHint('<b>Here it is:</b><div class="eq">' + esc(G.puz.equation) + '</div>' + esc(fastWay(G.puz)), 'reveal'); kakAfter(); }
+function kakSolved() {
+  const ok = G.tries === 0 && G.hints === 0, ms = Date.now() - G.t0;
+  G.done = true; stopSpeedBar(); markParts(); kakRecord(ok, ms);
+  const fast = ok && ms < G.puz.numbers.length * KMODES.find(m => m.id === G.mode).perNum;
+  setHint('<div class="eq">' + esc(G.puz.equation) + '</div>' + (fast ? pick(QUICK) : pick(CHEERS)) + ' <span class="muted">(' + (ms / 1000).toFixed(1) + 's)</span>' + (G.unlockMsg ? '<div style="margin-top:6px">' + G.unlockMsg + '</div>' : ''), 'reveal');
+  kakAfter(true);
+}
+function kakRecord(ok, ms) {
+  const p = me(), k = p.kak; G.unlockMsg = '';
+  ms = ms || (Date.now() - G.t0);
+  if (G.meta) { if (G.mi < G.meta.minis.length) { G.collected.push(G.puz.answer); record('kakooma', ok, ms); return; }
+    record('kakooma', ok, Date.now() - G.t0meta, ok ? 'kakmeta:' + G.mode : null); return; }
+  const g = k.group[G.mode] || 4, mdef = KMODES.find(m => m.id === G.mode);
+  record('kakooma', ok, ms, ok ? 'kak:' + G.mode : null);
+  if (ok && ms < g * mdef.perNum) { k.streakUp++; k.missRow = 0; } else if (!ok) { k.missRow++; k.streakUp = 0; } else { k.streakUp = 0; k.missRow = 0; }
+  if (k.streakUp >= 3 && g < mdef.maxG) { k.group[G.mode] = g + 1; k.streakUp = 0; G.unlockMsg = '📈 Bigger puzzles now: ' + (g + 1) + ' numbers!'; }
+  if (k.missRow >= 2 && g > 4) { k.group[G.mode] = g - 1; k.missRow = 0; }
+  // unlock next mode: quick+accurate at top-ish group size
+  const mi = KMODES.findIndex(m => m.id === G.mode);
+  k.hist = (k.hist || []).concat([{ m: G.mode, ok, fast: ok && ms < g * mdef.perNum, g }]).slice(-10);
+  const recent = k.hist.filter(h => h.m === G.mode && h.g >= Math.min(mdef.maxG, 6) - (G.mode === 'add12' ? 1 : 0));
+  if (mi < KMODES.length - 1 && !kakUnlocked(p, KMODES[mi + 1].id) && recent.length >= 8 && recent.filter(h => h.ok && h.fast).length >= 7) {
+    k.unlocked.push(KMODES[mi + 1].id); G.unlockMsg = '🔓 New level unlocked: ' + KMODES[mi + 1].label + '!';
+  }
+  save();
+}
+function kakAfter(solved) {
+  const p = me();
+  const lastOfMeta = G.meta && G.mi >= G.meta.minis.length;
+  const isMini = G.meta && !lastOfMeta;
+  const nextLabel = isMini ? (G.mi + 1 < G.meta.minis.length ? 'Next mini ▶' : 'Final puzzle ▶') : G.meta ? 'Done ▶' : 'Next ▶';
+  const nextAct = isMini ? 'kakMetaNext' : G.meta ? 'kakHome' : 'kakNext';
+  document.getElementById('kakActions').innerHTML = '<button class="btn" data-act="' + nextAct + '">' + nextLabel + '</button>';
+  // Flip it! (optional fact-family follow-up) — after regular puzzles and the final meta puzzle
+  if (solved && p.flipIt && !isMini) {
+    const f = P.buildFlipIt(G.puz);
+    if (f) { G.flip = f; G.flipTries = 0;
+      document.getElementById('flip').innerHTML = '<div class="card" style="min-height:0;margin-top:12px"><div class="row"><div class="big" style="font-size:22px">🔄 Flip it!</div><span class="spacer"></span><button class="btn ghost small" data-act="flipSkip">Skip</button></div>' +
+        '<div class="problem" style="font-size:44px">' + esc(f.prompt) + '</div><div class="choices">' + f.choices.map(c => '<button class="choice" data-act="flipAns" data-arg="' + c + '">' + c + '</button>').join('') + '</div><div id="flipMsg" class="muted" style="font-size:18px;text-align:center"></div></div>';
+      setTimeout(() => { const fe = document.getElementById('flip'); fe && fe.scrollIntoView && fe.scrollIntoView({ behavior: 'smooth', block: 'end' }); }, 350); }
+  }
+}
+ACT.flipSkip = () => { const f = document.getElementById('flip'); if (f) f.innerHTML = ''; };
+ACT.flipAns = (v, el) => {
+  const f = G.flip; if (!f || f.done) return;
+  const msg = document.getElementById('flipMsg');
+  if (+v === f.answer) { f.done = true; el.classList.add('good'); msg.innerHTML = '🌟 ' + esc(f.explain) + '<br>Same three numbers — a fact family!'; record('flipit', G.flipTries === 0, 0); return; }
+  G.flipTries++; el.classList.add('bad'); setTimeout(() => el.classList.remove('bad'), 600);
+  if (G.flipTries === 1) msg.innerHTML = '🤔 Think backwards: ' + (f.kind === 'div' ? 'what times the number you divide by gives the big number?' : 'what do you add to the smaller number to get the big one?');
+  else { f.done = true; msg.innerHTML = 'Here it is: <b>' + esc(f.explain) + '</b>'; record('flipit', false, 0); }
+};
+ACT.kakNext = () => nextKak();
+ACT.kakMetaNext = () => { G.mi++; nextKak(); };
+
+/* ---------------- PARENT VIEW ---------------- */
+function goParent() {
+  const days = []; for (let i = 13; i >= 0; i--) { const d = new Date(); d.setDate(d.getDate() - i); days.push(d); }
+  const html = S.players.map(p => {
+    const maxSec = Math.max(SESSION_GOAL_SEC, ...days.map(d => (p.days[todayKey(d)] || {}).sec || 0));
+    const bars = '<div class="bars">' + days.map(d => { const r = p.days[todayKey(d)] || {}; return '<div class="' + (r.goalMet ? 'goal' : '') + '" style="height:' + Math.round((r.sec || 0) / maxSec * 100) + '%" title="' + Math.round((r.sec || 0) / 60) + ' min"></div>'; }).join('') + '</div>' +
+      '<div class="bars-labels">' + days.map(d => '<span>' + (d.getMonth() + 1) + '/' + d.getDate() + '</span>').join('') + '</div>';
+    const rows = days.slice().reverse().filter(d => p.days[todayKey(d)]).map(d => { const r = p.days[todayKey(d)];
+      return '<tr><td>' + (d.getMonth() + 1) + '/' + d.getDate() + '</td><td>' + Math.round(r.sec / 60) + '</td><td>' + r.items + '</td><td>' + (r.items ? Math.round(r.ok / r.items * 100) + '%' : '–') + '</td><td>' + (r.items ? (r.msSum / r.items / 1000).toFixed(1) + 's' : '–') + '</td><td>' + (r.goalMet ? '✅' : '') + '</td></tr>'; }).join('');
+    const ci = currentSkillIndex(p);
+    const path = SKILLS.map((s, i) => { const st = p.skills[s.id], un = skillUnlocked(p, i);
+      const h = st.hist, acc = h.length ? Math.round(h.filter(x => x.ok).length / h.length * 100) : (st.total ? Math.round(st.ok / st.total * 100) : null), med = median(h.filter(x => x.ok).map(x => x.ms));
+      let status, note = '';
+      if (st.mastered) status = '⭐ Mastered';
+      else if (!un) status = '🔒 Not yet';
+      else if (st.total === 0) status = '▶ Up next';
+      else { status = '🔵 Level ' + (st.level + 1) + '/' + s.levels + ': ' + s.levelNames[st.level];
+        const stuck = st.levelAttempts >= 40 || (h.length >= 10 && acc < 70);
+        const slow = h.length >= 10 && acc >= 90 && med > s.targetMs;
+        if (stuck) note = '⚠️ <b>Stuck here</b> — ' + s.help;
+        else if (slow) note = '🐢 Accurate but still slow (median ' + (med / 1000).toFixed(1) + 's vs ' + (s.targetMs / 1000) + 's goal) — more short practice builds speed.'; }
+      return '<tr' + (i === ci && !st.mastered ? ' style="background:var(--panel2)"' : '') + '><td style="text-align:left">' + s.emoji + ' ' + s.title + '</td><td style="text-align:left">' + status + (note ? '<div style="font-size:15px;color:var(--accent)">' + note + '</div>' : '') + '</td><td>' + (acc === null ? '–' : acc + '%') + '</td><td>' + (med ? (med / 1000).toFixed(1) + 's' : '–') + '</td><td>' + st.total + '</td></tr>'; }).join('');
+    const kakTop = KMODES.filter(m => kakUnlocked(p, m.id)).map(m => m.short).join(', ');
+    const bests = Object.keys(p.best).filter(k => k.indexOf('kak') === 0).map(k => k.replace('kakmeta:', 'Puzzle-in-a-Puzzle ').replace('kak:', '') + ': ' + (p.best[k] / 1000).toFixed(1) + 's').join(' · ');
+    return '<div class="card" style="min-height:0"><div class="row"><h2 style="flex:1">' + esc(p.name) + '</h2><span class="chip">🔥 ' + streak(p) + '-day streak</span><button class="edit" data-act="rename" data-arg="' + p.id + '">✏️ Rename</button></div>' +
+      '<b>Minutes per day (last 14 days; green = 10-min goal met)</b>' + bars +
+      '<b style="margin-top:10px">Foundations path</b><table><tr><th style="text-align:left">Skill</th><th style="text-align:left">Status</th><th>Recent acc.</th><th>Median time</th><th>Total</th></tr>' + path + '</table>' +
+      '<b style="margin-top:10px">Kakooma</b><div class="muted">Unlocked: ' + kakTop + (bests ? '<br>Best times: ' + esc(bests) : '') + '</div>' +
+      (rows ? '<b style="margin-top:10px">Daily log</b><table><tr><th>Day</th><th>Min</th><th>Problems</th><th>1st-try</th><th>Avg time</th><th>Goal</th></tr>' + rows + '</table>' : '<div class="muted">No play yet.</div>') +
+      '<div class="row" style="margin-top:10px"><button class="btn secondary small" data-act="toggle" data-arg="' + p.id + ':unlockAllPath">' + (p.unlockAllPath ? '✅' : '⬜') + ' Unlock all path steps</button>' +
+      '<button class="btn secondary small" data-act="toggle" data-arg="' + p.id + ':unlockAllKak">' + (p.unlockAllKak ? '✅' : '⬜') + ' Unlock all Kakooma levels</button>' +
+      '<button class="btn secondary small" data-act="toggle" data-arg="' + p.id + ':flipIt">' + (p.flipIt ? '✅' : '⬜') + ' “Flip it” follow-ups</button>' +
+      '<button class="btn ghost small" data-act="resetP" data-arg="' + p.id + '">Reset data</button></div></div>';
+  }).join('');
+  const prev = S.current; S.current = prev;
+  render('<div class="topbar"><button class="btn secondary small" data-act="' + (prev ? 'hub' : 'home') + '">◀</button><div class="title">👪 Grown-ups</div></div><div class="screen">' +
+    '<p class="muted">Mastery rule: a level unlocks after 9 of the last 10 answers are right on the first try (no hints) at a comfortable speed. Everything is stored only on this iPad.</p>' + html + '</div>', false);
+}
+ACT.parent = goParent;
+ACT.toggle = arg => { const [id, key] = arg.split(':'); const p = S.players.find(x => x.id === id); p[key] = !p[key]; save(); goParent(); };
+ACT.resetP = id => { const p = S.players.find(x => x.id === id); modal('<h2>Reset ' + esc(p.name) + '?</h2><p>This erases all progress for this player on this iPad.</p><button class="btn" data-act="resetYes" data-arg="' + id + '">Yes, reset</button><button class="btn ghost" data-act="closeModal">Cancel</button>'); };
+ACT.resetYes = id => { const i = S.players.findIndex(x => x.id === id), old = S.players[i]; S.players[i] = mkPlayer(old.id, old.name, old.color); save(); closeModal(); goParent(); };
+
+/* ---------------- ABOUT ---------------- */
+ACT.about = () => render(topbar('About', 'home') + '<div class="screen"><div class="idea"><h2>' + APP_NAME + '</h2>' +
+  '<p>A private family practice app. No accounts, no ads, no tracking, no internet needed. Progress stays on this iPad.</p><br>' +
+  '<p><b>Credit:</b> The ideas here come from math educator <b>Greg Tang</b>: his puzzle <b>Kakooma</b>® (find the number that is the sum or product of two others), and his teaching methods — seeing quantities in groups with five- and ten-frames instead of counting, number bonds, making tens, subtracting by thinking addition, and building multiplication facts from ones you know (from books like <i>The Grapes of Math</i>, <i>Math for All Seasons</i>, <i>The Best of Times</i>, and <i>Math Potatoes</i>).</p><br>' +
+  '<p>This app is not made by or affiliated with Greg Tang or Tang Math. To support his work and play the real thing, visit:</p>' +
+  '<p><a href="https://tangmath.com" target="_blank" rel="noopener">tangmath.com</a> · <a href="https://app.tangmath.com" target="_blank" rel="noopener">app.tangmath.com</a> · <a href="https://gregtangmath.com" target="_blank" rel="noopener">gregtangmath.com</a> · <a href="http://www.gregtang.com" target="_blank" rel="noopener">gregtang.com</a></p></div></div>');
+
+/* ---------------- boot ---------------- */
+if (location.protocol.indexOf('http') === 0 && 'serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(() => {});
+window.NSL = { S, goHome, goHub, goParent, ACT, get G() { return G; } }; // for testing
+S.current ? goHub() : goHome();
+})();
+
+</script>
+</body>
+</html>
